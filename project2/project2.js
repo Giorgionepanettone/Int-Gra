@@ -57,6 +57,7 @@ var meshVS = `
 // Fragment shader source code
 var meshFS = `
 	precision mediump float;
+	uniform bool showTexture;
 	void main()
 	{
 		gl_FragColor = vec4(1,1,1,1);
