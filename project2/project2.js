@@ -82,6 +82,8 @@ class MeshDrawer
 		this.textBuffer = gl.createBuffer();
 
 		this.swapAxes = gl.getUniformLocation(this.prog, "swapYZ");
+
+		this.showTexture = gl.getUniformLocation(this.prog, "showTexture");
 		gl.useProgram(this.prog);
 		gl.uniform1i(this.swapAxes, 0);
 	}
@@ -131,8 +133,8 @@ class MeshDrawer
 		gl.uniformMatrix4fv(this.mvp, false, trans);
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertBuffer);
 
-		gl.vertexAttribPointer(this.vertPos, 3, gl.FLOAT, false, 0, 0);
 		gl.enableVertexAttribArray(this.vertPos);
+		gl.vertexAttribPointer(this.vertPos, 3, gl.FLOAT, false, 0, 0);
 		gl.drawArrays(gl.TRIANGLES, 0, this.numTriangles);
 	}
 	
@@ -141,12 +143,14 @@ class MeshDrawer
 	setTexture( img )
 	{
 		// [TO-DO] Bind the texture
-
+		var texture = gl.createTexture;
+		gl.bindTexture(gl.TEXTURE_2D, texture);
 		// You can set the texture image data using the following command.
 		gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img );
 
 		// [TO-DO] Now that we have a texture, it might be a good idea to set
 		// some uniform parameter(s) of the fragment shader, so that it uses the texture.
+
 	}
 	
 	// This method is called when the user changes the state of the
@@ -155,6 +159,7 @@ class MeshDrawer
 	showTexture( show )
 	{
 		// [TO-DO] set the uniform parameter(s) of the fragment shader to specify if it should use the texture.
+		gl.uniform1i(this.showTexture, show);
 	}
 	
 }
