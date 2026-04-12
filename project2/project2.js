@@ -70,11 +70,12 @@ var meshFS = `
 	varying vec2 textCoord;
 	
 	uniform bool showText;
+	uniform bool texture_loaded;
 	uniform sampler2D text;
 
 	void main()
 	{
-		if (showText){
+		if (showText && texture_loaded){
 			gl_FragColor = texture2D(text, textCoord);
 		}
 		else{
@@ -96,6 +97,7 @@ class MeshDrawer
 
 		this.swapAxes = gl.getUniformLocation(this.prog, "swapYZ");
 		this.showText = gl.getUniformLocation(this.prog, "showText");
+		this.textureLoaded = gl.getUniformLocation(this.prog, "texture_loaded");
 		this.sampler = gl.getUniformLocation(this.prog, "text");
 		this.mvp = gl.getUniformLocation(this.prog, "mvp");
 
@@ -108,6 +110,8 @@ class MeshDrawer
 		gl.useProgram(this.prog);
 		gl.uniform1i(this.swapAxes, 0);
 		gl.uniform1i(this.showText, 1);
+		gl.uniform1i(this.textureLoaded, 0);
+
 	}
 	
 	// This method is called every time the user opens an OBJ file.
@@ -177,6 +181,7 @@ class MeshDrawer
 		// some uniform parameter(s) of the fragment shader, so that it uses the texture.
 		gl.useProgram(this.prog);
 		gl.uniform1i(this.sampler, 0);
+		gl.uniform1i(this.textureLoaded, 1);
 	}
 	
 	// This method is called when the user changes the state of the
