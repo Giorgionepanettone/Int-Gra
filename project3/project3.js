@@ -94,6 +94,7 @@ var meshFS = `
 			Kd = vec4(1,1,1,1);
 		}
 		
+		vec4 ambientLight = vec4(0.1,0.1,0.1,1);
 		vec4 Ks = vec4(1,1,1,1);
 		vec4 I = vec4(1,1,1,1);
 		
@@ -102,10 +103,11 @@ var meshFS = `
 		vec3 n = normalize(camera_norm);
 		vec3 h = normalize(w + v);
 
-		float cosphi = dot(n, h);
-		float costheta = dot(n, w);
+		float cosphi = max(0.0, dot(n, h));
+		float costheta = max(0.0, dot(n, w));
 
-		gl_FragColor = I * (costheta * Kd + Ks * pow(cosphi, alpha)); //blinn
+		vec4 blinn = I * (costheta * Kd + Ks * pow(cosphi, alpha));
+		gl_FragColor = max(Kd * ambientLight, blinn); //to not have non illuminated areas completely dark
 	}
 `;
 
@@ -212,7 +214,7 @@ class MeshDrawer
 		else {
     		gl.disableVertexAttribArray(this.txc); 
 		}
-		
+
 		gl.drawArrays(gl.TRIANGLES, 0, this.numTriangles);
 	}
 	
