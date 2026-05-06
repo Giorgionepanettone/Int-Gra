@@ -4,7 +4,6 @@
 // You can use the MatrixMult function defined in project5.html to multiply two 4x4 matrices in the same format.
 function GetModelViewMatrix( translationX, translationY, translationZ, rotationX, rotationY )
 {
-	// [TO-DO] Modify the code below to form the transformation matrix.
 	var cosX = Math.cos(rotationX);
 	var sinX = Math.sin(rotationX);
 
@@ -107,18 +106,16 @@ var meshFS = `
 		float costheta = max(0.0, dot(n, w));
 
 		vec4 blinn = I * (costheta * Kd + Ks * pow(cosphi, alpha));
-		gl_FragColor = max(Kd * ambientLight, blinn); //to not have non illuminated areas completely dark
+		
+		gl_FragColor = Kd * ambientLight + blinn;
 	}
 `;
-
-// [TO-DO] Complete the implementation of the following class.
 
 class MeshDrawer
 {
 	// The constructor is a good place for taking care of the necessary initializations.
 	constructor()
 	{
-		// [TO-DO] initializations
 		this.prog = InitShaderProgram(meshVS, meshFS);
 
 		this.vertPos = gl.getAttribLocation(this.prog, "pos");
@@ -161,7 +158,6 @@ class MeshDrawer
 	// Note that this method can be called multiple times.
 	setMesh( vertPos, textCoords, normals )
 	{
-		// [TO-DO] Update the contents of the vertex buffer objects.
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertPos), gl.STATIC_DRAW);
 
@@ -179,7 +175,6 @@ class MeshDrawer
 	// The argument is a boolean that indicates if the checkbox is checked.
 	swapYZ( swap )
 	{
-		// [TO-DO] Set the uniform parameter(s) of the vertex shader
 		gl.useProgram(this.prog);
 		gl.uniform1i(this.swapAxes, swap);
 	}
@@ -191,7 +186,6 @@ class MeshDrawer
 	// transformation matrix, which is the inverse-transpose of matrixMV.
 	draw( matrixMVP, matrixMV, matrixNormal )
 	{
-		// [TO-DO] Complete the WebGL initializations before drawing
 		gl.useProgram(this.prog);	
 		gl.uniformMatrix4fv(this.mvp, false, matrixMVP);
 		gl.uniformMatrix4fv(this.mv, false, matrixMV);
@@ -222,7 +216,6 @@ class MeshDrawer
 	// The argument is an HTML IMG element containing the texture data.
 	setTexture( img )
 	{
-		// [TO-DO] Bind the texture
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
@@ -232,8 +225,7 @@ class MeshDrawer
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-		// [TO-DO] Now that we have a texture, it might be a good idea to set
-		// some uniform parameter(s) of the fragment shader, so that it uses the texture.
+
 		gl.useProgram(this.prog);
 		gl.uniform1i(this.sampler, 0);
 		gl.uniform1i(this.textureLoaded, 1);
@@ -244,7 +236,6 @@ class MeshDrawer
 	// The argument is a boolean that indicates if the checkbox is checked.
 	showTexture( show )
 	{
-		// [TO-DO] set the uniform parameter(s) of the fragment shader to specify if it should use the texture.
 		gl.useProgram(this.prog);
 		gl.uniform1i(this.showText, show);
 		this.useTexture = show;
@@ -253,15 +244,13 @@ class MeshDrawer
 	// This method is called to set the incoming light direction
 	setLightDir( x, y, z )
 	{
-		// [TO-DO] set the uniform parameter(s) of the fragment shader to specify the light direction.
 		gl.useProgram(this.prog);
-		gl.uniform3f(this.lightDirection, x, y, z)
+		gl.uniform3f(this.lightDirection, x, y, z);
 	}
 	
 	// This method is called to set the shininess of the material
 	setShininess( shininess )
 	{
-		// [TO-DO] set the uniform parameter(s) of the fragment shader to specify the shininess.
 		gl.useProgram(this.prog);
 		gl.uniform1f(this.shininess, shininess);
 	}
