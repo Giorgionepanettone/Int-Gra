@@ -33,7 +33,20 @@ uniform Light  lights [ NUM_LIGHTS  ];
 uniform samplerCube envMap;
 uniform int bounceLimit;
 
-bool IntersectRay( inout HitInfo hit, Ray ray );
+float epsilon = 0.001;
+
+bool IntersectRay( inout HitInfo hit, Ray ray, bool calculating_shadow );
+
+vec3 blinn(Light light, vec3 position, vec3 view, vec3 normal, Material mtl){
+
+	vec3 light_dir = normalize(light.position - position);
+	vec3 h = normalize(light_dir + view);
+
+	float cosphi = max(0.0, dot(normal, h));
+	float costheta = max(0.0, dot(normal, light_dir));
+
+	return light.intensity * (costheta * mtl.k_d + mtl.k_s * pow(cosphi, mtl.n));
+}
 
 // Shades the given point and returns the computed color.
 vec3 Shade( Material mtl, vec3 position, vec3 normal, vec3 view )
@@ -50,17 +63,11 @@ vec3 Shade( Material mtl, vec3 position, vec3 normal, vec3 view )
 		Light cur_light = lights[i];
 		
 		ray.dir = cur_light.position - position;
-		bool is_shadowed = IntersectRay(hit, ray);
+		bool is_shadowed = IntersectRay(hit, ray, true);
 		
 		if (!is_shadowed || hit.t > 1.0){
-
-			vec3 light_dir = normalize(cur_light.position - position);
-			vec3 h = normalize(light_dir + view);
-			float cosphi = max(0.0, dot(normal, h));
-			float costheta = max(0.0, dot(normal, light_dir));
-			color += cur_light.intensity * (costheta * mtl.k_d + mtl.k_s * pow(cosphi, mtl.n));
+			color += blinn(cur_light, position, view, normal, mtl);
 		}
-		
 
 		//color += mtl.k_d * lights[i].intensity;	// change this line
 	}
@@ -71,9 +78,9 @@ vec3 Shade( Material mtl, vec3 position, vec3 normal, vec3 view )
 // and updates the given HitInfo using the information of the sphere
 // that first intersects with the ray.
 // Returns true if an intersection is found.
-bool IntersectRay( inout HitInfo hit, Ray ray )
+bool IntersectRay( inout HitInfo hit, Ray ray, bool calculating_shadow)
 {
-	hit.t = 1e30;
+	//hit.t = 1e30;
 	bool foundHit = false;
 	float t = 1e30;
 
@@ -90,10 +97,13 @@ bool IntersectRay( inout HitInfo hit, Ray ray )
 		float delta = b*b - 4.0*a*c;
 
 		if (delta >= 0.0){
-			
 			float new_t = (-b - sqrt(delta))/(2.0*a);
 
-			if (new_t < t && new_t > 0.001){
+			if (new_t < t && new_t > epsilon){
+				if(calculating_shadow){ //only care about first hit
+					return true;
+				}
+
 				foundHit = true;
 				t = new_t;
 				vec3 position = ray.pos + t * ray.dir;
@@ -109,6 +119,7 @@ bool IntersectRay( inout HitInfo hit, Ray ray )
 	return foundHit;
 }
 
+//this was done before I found out glsl reflect exists
 vec3 calculate_reflection(vec3 norm, vec3 dir){
 	return 2.0*dot(dir, norm)*norm - dir;
 }
@@ -118,15 +129,17 @@ vec3 calculate_reflection(vec3 norm, vec3 dir){
 vec4 RayTracer( Ray ray )
 {
 	HitInfo hit;
-	Ray r;	// this is the reflection ray
-	HitInfo h;	// reflection hit info
 
-	if ( IntersectRay( hit, ray ) ) {
-		vec3 view = normalize( -ray.dir );
+	if ( IntersectRay( hit, ray, false) ) {
+		vec3 view = normalize(-ray.dir);
 		vec3 clr = Shade( hit.mtl, hit.position, hit.normal, view );
-		
+
+		Ray r;	// this is the reflection ray
+		HitInfo h;	// reflection hit info
+
+		// TO-DO: Initialize the reflection ray
 		r.pos = hit.position;
-		r.dir = calculate_reflection(hit.normal, -ray.dir);
+		r.dir = reflect(ray.dir, hit.normal);
 
 		// Compute reflections
 		vec3 k_s = hit.mtl.k_s;
@@ -134,15 +147,15 @@ vec4 RayTracer( Ray ray )
 			if ( bounce >= bounceLimit ) break;
 			if ( hit.mtl.k_s.r + hit.mtl.k_s.g + hit.mtl.k_s.b <= 0.0 ) break;
 			
-			// TO-DO: Initialize the reflection ray
-
-			if ( IntersectRay( h, r ) ) {
+			if ( IntersectRay( h, r, false) ) {
 				// TO-DO: Hit found, so shade the hit point
 				// TO-DO: Update the loop variables for tracing the next reflection ray
-				vec3 bounce_view = normalize(-r.dir)
-				clr += Shade(h.mtl, h.position, h.normal, bounce_view);
+				vec3 bounce_view = normalize(-r.dir);
+				clr += k_s * Shade(h.mtl, h.position, h.normal, bounce_view);
+
 				r.pos = h.position;
-				r.dir = calculate_reflection(h.normal, -r.dir);
+				r.dir = reflect(r.dir, h.normal);
+				k_s = k_s * h.mtl.k_s;
 			} else {
 				// The refleciton ray did not intersect with anything,
 				// so we are using the environment color
