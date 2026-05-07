@@ -33,16 +33,16 @@ uniform Light  lights [ NUM_LIGHTS  ];
 uniform samplerCube envMap;
 uniform int bounceLimit;
 
-float epsilon = 0.001;
+float epsilon = 0.0001;
 
 bool IntersectRay( inout HitInfo hit, Ray ray, bool calculating_shadow );
 
 vec3 blinn(Light light, vec3 position, vec3 view, vec3 normal, Material mtl){
 
 	vec3 light_dir = normalize(light.position - position);
-	vec3 h = normalize(light_dir + view);
+	vec3 half_vector = normalize(light_dir + view);
 
-	float cosphi = max(0.0, dot(normal, h));
+	float cosphi = max(0.0, dot(normal, half_vector));
 	float costheta = max(0.0, dot(normal, light_dir));
 
 	return light.intensity * (costheta * mtl.k_d + mtl.k_s * pow(cosphi, mtl.n));
@@ -62,10 +62,11 @@ vec3 Shade( Material mtl, vec3 position, vec3 normal, vec3 view )
 		// TO-DO: If not shadowed, perform shading using the Blinn model
 		Light cur_light = lights[i];
 		
-		ray.dir = cur_light.position - position;
+		vec3 light_vector = cur_light.position - position;
+		ray.dir = normalize(light_vector);
 		bool is_shadowed = IntersectRay(hit, ray, true);
 		
-		if (!is_shadowed || hit.t > 1.0){
+		if (!is_shadowed || hit.t > length(light_vector)){
 			color += blinn(cur_light, position, view, normal, mtl);
 		}
 
@@ -139,7 +140,7 @@ vec4 RayTracer( Ray ray )
 
 		// TO-DO: Initialize the reflection ray
 		r.pos = hit.position;
-		r.dir = reflect(ray.dir, hit.normal);
+		r.dir = normalize(reflect(ray.dir, hit.normal));
 
 		// Compute reflections
 		vec3 k_s = hit.mtl.k_s;
@@ -150,7 +151,7 @@ vec4 RayTracer( Ray ray )
 			if ( IntersectRay( h, r, false) ) {
 				// TO-DO: Hit found, so shade the hit point
 				// TO-DO: Update the loop variables for tracing the next reflection ray
-				vec3 bounce_view = normalize(-r.dir);
+				vec3 bounce_view = -r.dir;
 				clr += k_s * Shade(h.mtl, h.position, h.normal, bounce_view);
 
 				r.pos = h.position;
