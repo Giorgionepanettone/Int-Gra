@@ -58,8 +58,6 @@ vec3 Shade( Material mtl, vec3 position, vec3 normal, vec3 view )
 	ray.pos = position;
 
 	for ( int i=0; i<NUM_LIGHTS; ++i ) {
-		// TO-DO: Check for shadows
-		// TO-DO: If not shadowed, perform shading using the Blinn model
 		Light cur_light = lights[i];
 		
 		vec3 light_vector = cur_light.position - position;
@@ -88,8 +86,6 @@ bool IntersectRay( inout HitInfo hit, Ray ray, bool calculating_shadow)
 	float a = dot(ray.dir, ray.dir);
 
 	for ( int i=0; i<NUM_SPHERES; ++i ) {
-		// TO-DO: Test for ray-sphere intersection
-		// TO-DO: If intersection is found, update the given HitInfo
 		Sphere cur_sphere = spheres[i];
 
 		vec3 center_to_pos = ray.pos - cur_sphere.center;
@@ -139,7 +135,6 @@ vec4 RayTracer( Ray ray )
 		Ray r;	// this is the reflection ray
 		HitInfo h;	// reflection hit info
 
-		// TO-DO: Initialize the reflection ray
 		r.pos = hit.position;
 		r.dir = normalize(reflect(ray.dir, hit.normal));
 
@@ -150,8 +145,6 @@ vec4 RayTracer( Ray ray )
 			if ( hit.mtl.k_s.r + hit.mtl.k_s.g + hit.mtl.k_s.b <= 0.0 ) break;
 			
 			if ( IntersectRay( h, r, false) ) {
-				// TO-DO: Hit found, so shade the hit point
-				// TO-DO: Update the loop variables for tracing the next reflection ray
 				vec3 bounce_view = -r.dir;
 				clr += k_s * Shade(h.mtl, h.position, h.normal, bounce_view);
 
