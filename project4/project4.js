@@ -102,6 +102,7 @@ bool IntersectRay( inout HitInfo hit, Ray ray, bool calculating_shadow)
 
 			if (new_t < t && new_t > epsilon){
 				if(calculating_shadow){ //only care about first hit
+					hit.t = new_t;
 					return true;
 				}
 
