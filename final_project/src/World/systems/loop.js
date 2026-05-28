@@ -1,7 +1,7 @@
-import { Clock } from "https://esm.sh/three@0.184.0";
+import { Timer } from "https://esm.sh/three@0.184.0";
 import {Vector3} from "https://esm.sh/three@0.184.0";
 
-const clock = new Clock();
+const clock = new Timer();
 
 class Loop {
   constructor(camera, scene, renderer) {
@@ -24,6 +24,7 @@ class Loop {
   }
 
   tick(){
+    clock.update();
     const delta = clock.getDelta();
     for(const object of this.updateTable){
         object.tick(delta);

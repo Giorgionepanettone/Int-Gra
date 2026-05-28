@@ -1,11 +1,15 @@
-import { DirectionalLight } from 'https://esm.sh/three@0.184.0';
+import { DirectionalLight, HemisphereLight} from 'https://esm.sh/three@0.184.0';
 
 function createLights() {
-// Create a directional light
-const light = new DirectionalLight('white', 8);
-
-light.position.set(10,10,10);
-return light;
+    // Create a directional light
+    const directLight = new DirectionalLight('white', 8);
+    const ambientLight = new HemisphereLight(
+    'white', // bright sky color
+    'darkslategrey', // dim ground color
+    3, // intensity
+    );
+    //directLight.position.set(0,0,-2);
+    return {directLight, ambientLight};
 }
 
 export { createLights };
