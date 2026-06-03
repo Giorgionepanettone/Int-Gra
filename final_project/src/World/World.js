@@ -12,6 +12,8 @@ import { loadModels } from './components/loadModels.js';
 
 import { Resizer } from './systems/Resizer.js';
 import { Loop } from './systems/Loop.js';
+import { CannonWorld } from './systems/engine/cannonWorld.js'
+import { MainCharacter } from './components/mainCharacter.js';
 
 // These variables are module-scoped: we cannot access them
 // from outside the module
@@ -20,13 +22,15 @@ let camera;
 let scene;
 let renderer;
 let loop;
+let cannonWorld;
 
 class World {
   constructor(container) {
+    cannonWorld = new CannonWorld();
     camera = createCamera();
     scene = createScene();
     renderer = createRenderer();
-    loop = new Loop(camera, scene, renderer);
+    loop = new Loop(camera, scene, renderer, cannonWorld);
     container.append(renderer.domElement);
     
     const {directLight, ambientLight} = createLights();
@@ -37,18 +41,19 @@ class World {
   }
 
   async init() {
-    const {map, astronaut} = await loadModels();
-
-    //astronaut.rotation.y = Math.PI/2;
-    //astronaut.rotation.y = Math.PI;
-    //astronaut.add(camera);
+    const {map} = await loadModels();
+    scene.add(map);
     const pointerLockControls = createPointerLockControls(camera, renderer.domElement); 
-    //const firstPersonControls = createFirstPersonControls(camera, renderer.domElement);
-    loop.updateTable.push(pointerLockControls);
+    loop.addUpdateTable(pointerLockControls);
     pointerLockControls.lock(true);
 
     const axesHelper = new AxesHelper( 5 );
+    axesHelper.position.z -= 1;
+    axesHelper.position.x -= 1;
     scene.add( axesHelper );
+
+    const mainCharacter = new MainCharacter(cannonWorld);
+    mainCharacter.init(scene, camera);
 
   }
 
@@ -63,6 +68,10 @@ class World {
 
   stop() {
     loop.stop();
+  }
+
+  animate(){
+    requestAnimationFrame()
   }
 }
 
