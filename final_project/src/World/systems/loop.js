@@ -15,16 +15,15 @@ class Loop {
 
   start() {
     this.renderer.setAnimationLoop(() => {
-        this.cannonWorld.makeFixedStep();
-
-        //COPY OBJECTS POSITIONS AND ROTATIONS FROM CANNON TO THREE BEFORE RENDERING
-        for(const actor of this.actors){
-          actor.update();
-        }
-
+        clock.update();
+        const delta = clock.getDelta();
         for(const obj of this.updateTable){
-          obj.tick();
+          obj.tick(delta);
         }
+
+        //const result = this.octree.capsuleIntersect(player); 
+        
+        //handleCollision
 
         this.renderer.render(this.scene, this.camera);
     });

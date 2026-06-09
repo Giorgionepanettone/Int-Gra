@@ -1,22 +1,30 @@
+
+import { createPointerLockControls } from './systems/PointerLockControls.js';
+import { createFirstPersonControls } from './systems/firstPersonControls.js';
+import { createOrbitControls } from './systems/orbitControls.js';
+import { AxesHelper} from 'https://esm.sh/three@0.184.0'
+
+import { loadMap } from './components/map.js';
+import { loadModels } from './components/loadModels.js';
 import { createCamera } from './components/camera.js';
 import { createMeshGroup } from './components/meshGroup.js';
 import { createLights } from './components/lights.js';
 import { createScene } from './components/scene.js';
-import { createPointerLockControls } from './systems/PointerLockControls.js';
-import { createFirstPersonControls } from './systems/firstPersonControls.js';
-import { AxesHelper} from 'https://esm.sh/three@0.184.0'
-
-import { createRenderer } from './systems/renderer.js';
-import { loadMap } from './components/map.js';
-import { loadModels } from './components/loadModels.js';
+import { MainCharacter } from './components/mainCharacter.js';
+import { Fly } from './components/fly.js';
 
 import { Resizer } from './systems/Resizer.js';
 import { Loop } from './systems/Loop.js';
 import { CannonWorld } from './systems/engine/cannonWorld.js'
-import { MainCharacter } from './components/mainCharacter.js';
+import { createRenderer } from './systems/renderer.js';
+import { fpsControls } from './systems/fpsControls.js';
 
-// These variables are module-scoped: we cannot access them
-// from outside the module
+import { Octree } from 'https://esm.sh/three@0.184.0/examples/jsm/math/Octree.js';
+import { CylinderGeometry } from 'https://esm.sh/three@0.184.0'
+import { Capsule } from 'https://esm.sh/three@0.184.0/examples/jsm/math/Capsule.js';
+import { Vector3, MeshBasicMaterial, MeshNormalMaterial, BoxHelper } from 'https://esm.sh/three@0.184.0';
+
+import {Tween, Easing} from 'https://unpkg.com/@tweenjs/tween.js@25.0.0/dist/tween.esm.js'
 
 let camera;
 let scene;
@@ -41,19 +49,64 @@ class World {
   }
 
   async init() {
-    const {map} = await loadModels();
-    scene.add(map);
+    const {houseModel, flyModel} = await loadModels();
+    const material = new MeshNormalMaterial( { color: 0xffff00 } );
+    
+    houseModel.traverse((child) => {
+        if (child.isMesh) {
+            child.material = material;
+        }
+    });
+    //houseModel.visible = false;
+    scene.add(houseModel);
+    
     const pointerLockControls = createPointerLockControls(camera, renderer.domElement); 
     loop.addUpdateTable(pointerLockControls);
     pointerLockControls.lock(true);
-
+    document.addEventListener( 'keydown', ( event ) => {
+			pointerLockControls.lock(true);
+		});
     const axesHelper = new AxesHelper( 5 );
-    axesHelper.position.z -= 1;
-    axesHelper.position.x -= 1;
-    scene.add( axesHelper );
+    axesHelper.position.set(0,-13,0);
+    scene.add( axesHelper ) ;
 
-    const mainCharacter = new MainCharacter(cannonWorld);
-    mainCharacter.init(scene, camera);
+    /* mainCharacterModel.rotation.y = Math.PI;
+    mainCharacterModel.position.set(0, -0.15, -0.25);
+    const mainCharacter = new MainCharacter(cannonWorld, mainCharacterModel);
+    //loop.addActor(mainCharacter);
+    camera.add(mainCharacterModel);
+    scene.add(camera); */
+    
+    
+    
+
+    //const orbitControls = createOrbitControls(camera, renderer.domElement);
+    //loop.addUpdateTable(orbitControls);
+
+    const player = new Capsule();
+    player.translate(new Vector3(0,2,0));
+    const octree = new Octree().fromGraphNode(scene);
+    
+    const playerControls = new fpsControls(player, camera, octree);
+    loop.addUpdateTable(playerControls);
+
+    for (var i = 0; i < 100; i++){
+      const new_model = flyModel.clone();
+      const fly = new Fly(new_model);
+      new_model.position.set(0,5,0);
+      scene.add(new_model);
+      loop.addUpdateTable(fly);
+      playerControls.addActor(fly);
+    }
+
+    const fly = new Fly(flyModel);
+    //flyModel.position.set(0,-18,0);
+    scene.add(flyModel);
+    loop.addUpdateTable(fly);
+    playerControls.addActor(fly);
+
+    /* const box = new BoxHelper(flyModel, 0xffff00);
+    scene.add(box); */
 
   }
 
@@ -63,7 +116,7 @@ class World {
   }
 
   start() {
-    loop.start();
+    loop.start(this.octree, this.player);
   }
 
   stop() {

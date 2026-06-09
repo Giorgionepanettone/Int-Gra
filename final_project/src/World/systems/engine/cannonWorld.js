@@ -7,6 +7,7 @@ class CannonWorld {
         this.cannonWorld = new CANNON.World({
         gravity : new CANNON.Vec3(0, GRAVITY, 0),
         });
+        this.cannonWorld.broadphase = new CANNON.SAPBroadphase(this.cannonWorld);
     }
 
     makeFixedStep(){

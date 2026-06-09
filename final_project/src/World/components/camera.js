@@ -10,7 +10,7 @@ function createCamera() {
 
   // move the camera back so we can view the scene
   //camera.rotation.y = Math.PI;
-  //camera.position.set(0, 0.1, -0.25);
+  camera.position.set(0, 0.1, -10);
   camera.tick = () => {
 
     //camera.rotation.x += 0.01;

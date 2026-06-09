@@ -5,7 +5,7 @@ const MASS = 70;
 
 class MainCharacter {
 
-    constructor(cannonWorld){
+    constructor(cannonWorld, MainCharacterModel){
         const shape = new CANNON.Box(new CANNON.Vec3(0.3,1.7,0.3));
         this.cannonBody = new CANNON.Body({
             mass: MASS,
@@ -14,25 +14,15 @@ class MainCharacter {
         this.cannonBody.addShape(shape);
         
         cannonWorld.addBody(this.cannonBody);
+        this.cannonBody.position.set(0, -0.15, -0.25);
+        this.MainCharacterModel = MainCharacterModel;
     }
 
     update(){
-        this.threeModel.position.copy(this.cannonBody.position);
-        this.threeModel.quaternion.copy(this.cannonBody.quaternion);
+        this.MainCharacterModel.position.copy(this.cannonBody.position);
+        this.MainCharacterModel.quaternion.copy(this.cannonBody.quaternion);
     }
 
-    async init(threeScene, threeCamera){
-        const loader = new GLTFLoader();
-
-        const modelData = await loader.loadAsync("./assets/models/fps_arms/rigged_low_poly_fps_hands.glb");
-
-        this.threeModel = modelData.scene;
-        this.threeModel.rotation.y = Math.PI;
-        this.threeModel.position.set(0, -0.15, -0.25);
-
-        threeScene.add(threeCamera);
-        threeCamera.add(this.threeModel);
-    }
 }
 
 export { MainCharacter }
