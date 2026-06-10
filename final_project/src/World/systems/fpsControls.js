@@ -2,12 +2,21 @@
 
 import { Vector3 } from 'https://esm.sh/three@0.184.0';
 
+const ZERO_VECTOR = new Vector3(0,0,0);
+
 const JUMP_FORCE = 40; 
+
 const PLAYER_MAX_VELOCITY = 40;
+
 const GRAVITY = -200.1;
-const max_velocity = new Vector3(PLAYER_MAX_VELOCITY, PLAYER_MAX_VELOCITY/3, PLAYER_MAX_VELOCITY);
-const min_velocity = new Vector3(-PLAYER_MAX_VELOCITY, -PLAYER_MAX_VELOCITY/3, -PLAYER_MAX_VELOCITY);
+
+const MAX_VELOCITY = new Vector3(PLAYER_MAX_VELOCITY, Math.max(JUMP_FORCE, PLAYER_MAX_VELOCITY/3), PLAYER_MAX_VELOCITY);
+const MIN_VELOCITY = new Vector3(-PLAYER_MAX_VELOCITY, -PLAYER_MAX_VELOCITY/3, -PLAYER_MAX_VELOCITY);
+
 const MOVEMENT_ACCELERATION = 100;
+
+const SPHERE_TRANSLATION_VECTOR = new Vector3(0,0.25,-0.17);
+
 
 class fpsControls {
 
@@ -25,6 +34,9 @@ class fpsControls {
             KeyD : false,
             Space : false
         }
+        this.forward = new Vector3();
+        this.right = new Vector3();
+        this.up = new Vector3();
 
         this.playerVelocity = new Vector3(0.0, 0.0, 0.0);
 
@@ -43,7 +55,10 @@ class fpsControls {
     }
 
     removeActor(actor){
-        this.actors.splice(0,1,actor);
+        const index = array.indexOf(actor);
+        if (index > -1) { 
+            array.splice(index, 1);
+        }
     }
 
     tick(delta){
@@ -98,59 +113,67 @@ class fpsControls {
             }
             }
 
-        this.playerVelocity.clamp(min_velocity, max_velocity);
+        this.playerVelocity.clamp(MIN_VELOCITY, MAX_VELOCITY);
     }
 
     updatePlayer(delta) {
         //const damping = Math.exp( - 4 * delta ) - 1;
 
-        //this.playerVelocity.addScaledVector(this.playerVelocity, damping);
         this.updatePlayerPosition(delta);
+        //this.playerVelocity.addScaledVector(this.playerVelocity, damping);
+
     }
 
     updatePlayerPosition(delta){
-        const forward = new Vector3();
-        this.camera.getWorldDirection(forward);
-        forward.y = 0; 
-        forward.normalize();
+        this.camera.getWorldDirection(this.forward);
+        this.forward.y = 0; 
+        this.forward.normalize();
 
-        const right = new Vector3().crossVectors(this.camera.up, forward).normalize();
+        this.right.crossVectors(this.camera.up, this.forward).normalize();
 
-        const moveX = right.multiplyScalar(-this.playerVelocity.x * delta);
-        const moveZ = forward.multiplyScalar(-this.playerVelocity.z * delta);
+        this.right.multiplyScalar(-this.playerVelocity.x * delta);
+        this.forward.multiplyScalar(-this.playerVelocity.z * delta);
+        this.up.set(0, this.playerVelocity.y * delta, 0);
 
-        this.player.translate(moveX);
-        this.player.translate(moveZ);
-
-        this.player.translate(new Vector3(0, this.playerVelocity.y * delta, 0));
+        this.player.translate(this.right);
+        this.player.translate(this.forward);
+        this.player.translate(this.up);
+        //console.log(this.camera.rotation);
     }
 
     handleCollision(delta) {
         
-        const result = this.octree.capsuleIntersect( this.player );
+        let result = this.octree.capsuleIntersect( this.player );
 
         if (result){
             //console.log(result);
             this.playerOnFloor = result.normal.y > 0.98
-            this.player.translate( result.normal.multiplyScalar( result.depth ) );
+            //this.playerVelocity.addScaledVector( result.normal, - result.normal.dot( this.playerVelocity ) );
+
+            for(let i = 0; i < 3; i++){
+                this.player.translate( result.normal.multiplyScalar( result.depth ) );
+                result = this.octree.capsuleIntersect(this.player);
+                if(!result) break;
+            }
             /* if ( ! this.playerOnFloor ) {
-                this.playerVelocity.addScaledVector( result.normal, - result.normal.dot( this.playerVelocity ) );
             }
 
             if ( result.depth >= 1e-10 ) {
                 this.player.translate( result.normal.multiplyScalar( result.depth ) );
             } */
-
         }
 
         for (const actor of this.actors){
-            actor.model.geometry.boundingBox.setFromObject(actor.model, true);
-            const result = this.octree.boxIntersect( actor.model.geometry.boundingBox );
+            //actor.model.geometry.boundingBox.setFromObject(actor.model, true);
+            //actor.hitboxSphere.center.copy(actor.model.position);
+            //actor.hitboxSphere.center.add(SPHERE_TRANSLATION_VECTOR);
+            const result = this.octree.sphereIntersect(actor.hitboxSphere);
+
             //console.log(actor.geometry.boundingBox);
-            if (result){
+            if (result && !result.normal.equals(ZERO_VECTOR)){
                 //console.log(result);
                 actor.model.position.addScaledVector(result.normal, result.depth);
-                actor.forceDirectionChange(result.normal);
+                actor.handleCollision(result.normal);
                 //console.log(actor.position);
                 //translateOnAxis( -result.normal , result.normal.multiplyScalar( result.depth ) );
             }
@@ -164,6 +187,8 @@ class fpsControls {
 
     update(delta) {
 		
+        delta = Math.min( 0.1, delta); //when brower window is not focused delta becomes really big causing problems
+
         this.updatePlayerVelocity(delta);
 
         this.updatePlayer(delta);

@@ -55,7 +55,7 @@ async function loadModels(){
     
     const [houseData, flyData] = await Promise.all([
         gltfLoader.loadAsync("./assets/models/house.glb"),
-        gltfLoader.loadAsync("./assets/models/fly_v2/fly.glb"),
+        gltfLoader.loadAsync("./assets/models/fly_v2/new_new_fly.glb"),
     ]);
 
     //const houseData = await gltfLoader.loadAsync("./assets/models/house.glb");
