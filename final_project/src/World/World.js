@@ -5,13 +5,14 @@ import { createOrbitControls } from './systems/orbitControls.js';
 import { AxesHelper} from 'https://esm.sh/three@0.184.0'
 
 import { loadMap } from './components/map.js';
-import { loadModels } from './components/loadModels.js';
+import { loadAssets } from './components/loadAssets.js';
 import { createCamera } from './components/camera.js';
 import { createMeshGroup } from './components/meshGroup.js';
 import { createLights } from './components/lights.js';
 import { createScene } from './components/scene.js';
 import { MainCharacter } from './components/mainCharacter.js';
 import { Fly } from './components/fly.js';
+import { Zapper} from './components/zapper.js'
 
 import { Resizer } from './systems/Resizer.js';
 import { Loop } from './systems/Loop.js';
@@ -22,7 +23,8 @@ import { fpsControls } from './systems/fpsControls.js';
 import { Octree } from 'https://esm.sh/three@0.184.0/examples/jsm/math/Octree.js';
 import { CylinderGeometry } from 'https://esm.sh/three@0.184.0'
 import { Capsule } from 'https://esm.sh/three@0.184.0/examples/jsm/math/Capsule.js';
-import { Vector3, MeshBasicMaterial, MeshNormalMaterial, BoxHelper, Sphere, SphereGeometry, Mesh } from 'https://esm.sh/three@0.184.0';
+import { TextureLoader, Vector3, MeshBasicMaterial, MeshNormalMaterial, Box3Helper, Sphere, SphereGeometry, Mesh, MathUtils, AudioListener, Audio, AudioLoader, BoxGeometry } from 'https://esm.sh/three@0.184.0';
+import { OctreeHelper } from 'https://esm.sh/three@0.184.0/examples/jsm/helpers/OctreeHelper.js'
 
 import {Tween, Easing} from 'https://unpkg.com/@tweenjs/tween.js@25.0.0/dist/tween.esm.js'
 
@@ -31,6 +33,8 @@ let scene;
 let renderer;
 let loop;
 let cannonWorld;
+
+const NUMBER_OF_FLIES = 1000;
 
 class World {
   constructor(container) {
@@ -49,56 +53,43 @@ class World {
   }
 
   async init() {
-    const {houseModel, flyModel} = await loadModels();
-    const material = new MeshNormalMaterial( { color: 0xffff00 } );
+    const {houseModel, flyModel, zapperModel, armsModel, zapSoundSharedBuffer, lightningTexture} = await loadAssets();
+    const material = new MeshNormalMaterial( { color: 0x00ffff } );
     
     houseModel.traverse((child) => {
         if (child.isMesh) {
             child.material = material;
         }
     });
+
     //houseModel.visible = false;
     scene.add(houseModel);
-    
-    const pointerLockControls = createPointerLockControls(camera, renderer.domElement); 
-    loop.addUpdateTable(pointerLockControls);
-    pointerLockControls.lock(true);
-    document.addEventListener( 'keydown', ( event ) => {
-			pointerLockControls.lock(true);
-		});
-    const axesHelper = new AxesHelper( 5 );
-    axesHelper.position.set(0,-17,0);
-    scene.add( axesHelper ) ;
 
-    /* mainCharacterModel.rotation.y = Math.PI;
-    mainCharacterModel.position.set(0, -0.15, -0.25);
-    const mainCharacter = new MainCharacter(cannonWorld, mainCharacterModel);
-    //loop.addActor(mainCharacter);
-    camera.add(mainCharacterModel);
-    scene.add(camera); */
-    
-    
-    
+    this.setupPointerLockControls();
 
-    //const orbitControls = createOrbitControls(camera, renderer.domElement);
-    //loop.addUpdateTable(orbitControls);
+    this.addAxesHelper();
 
-    const player = new Capsule();
-    player.translate(new Vector3(72,-10,16));
+    const player = this.addPlayer();
+
     camera.rotation.set(0.63, 1.31, -0.62);
+
     const octree = new Octree().fromGraphNode(scene);
+
+    //const helper = new OctreeHelper( octree );
+    //cene.add( helper );
     
-    const playerControls = new fpsControls(player, camera, octree);
-    loop.addUpdateTable(playerControls);
+    const zapper = new Zapper(zapperModel, camera);
 
-    const sphereTranslationVector = new Vector3(0,0.25,-0.17);
+    const controls = new fpsControls(player, camera, octree);
+    
+    loop.addUpdateTable(controls);
 
-    //flyModel.up = new Vector3(0,1,0);
-    for (var i = 0; i < 100; i++){
-      const new_model = flyModel.clone();
-      new_model.geometry.computeBoundingSphere();
-      const hitboxSphere = new Sphere(new_model.position, new_model.geometry.boundingSphere.radius/8);
-      
+    const listener = new AudioListener();
+    listener.gain.gain.value = 0.1;
+    camera.add(listener);
+    
+    for (let i = 0; i < NUMBER_OF_FLIES; i++){
+
       /* const sphere = new SphereGeometry(new_model.geometry.boundingSphere.radius/8w);
       const material = new MeshBasicMaterial({
         color: 'cyan',
@@ -106,7 +97,7 @@ class World {
         opacity: 0.4
       });
       //material.opacity = 1;
-      const mesh = new Mesh(sphere, material);
+      const mesh = new Mesh(sphere, material);  
       //mesh.opacity = 1;
       mesh.position.set(0,-17,0);
       //const sphereTranslationVector = new Vector3(0,0.25,-0.17);
@@ -116,11 +107,11 @@ class World {
       //new_model.rotation.y += Math.PI;
       scene.add(mesh); */
 
-      const fly = new Fly(new_model, hitboxSphere);
+      new Fly(flyModel.clone(), controls, loop, scene, listener, zapSoundSharedBuffer, lightningTexture);
       //new_model.position.set(0,0,0);
-      scene.add(new_model);
-      loop.addUpdateTable(fly);
-      playerControls.addActor(fly);
+      //scene.add(new_model);
+      //loop.addUpdateTable(fly);
+      //ontrols.addActor(fly);
     }
 
     /* const fly = new Fly(flyModel);
@@ -132,6 +123,27 @@ class World {
     /* const box = new BoxHelper(flyModel, 0xffff00);
     scene.add(box); */
 
+    
+    //console.log(zapperModel);
+    //scene.add(zapperModel);
+    camera.add(zapperModel);
+    //zapper.localHitbox.rotation.x -= Math.PI/2;
+    
+    //camera.add(robotArmModel);
+    //zapperModel.scale.multiplyScalar(0.01);
+    //scene.add(zapperModel);
+
+    //robotArmModel.position.set(0,0,-10);
+    //robotArmModel.rotation.set(MathUtils.degToRad(60),MathUtils.degToRad(0),MathUtils.degToRad(-100));
+
+    scene.add(camera);
+
+    //const box3Helper = new Box3Helper(zapper.hitbox, 0xffff00);
+    //scene.add(box3Helper);
+
+    //scene.add(robotArmModel);
+    controls.addWeapon(zapper);
+    //scene.add(armsModel);
   }
 
   render() {
@@ -149,6 +161,32 @@ class World {
 
   animate(){
     requestAnimationFrame()
+  }
+
+  setupPointerLockControls(){
+    const pointerLockControls = createPointerLockControls(camera, renderer.domElement); 
+    loop.addUpdateTable(pointerLockControls);
+    //sdpointerLockControls.lock(true);
+    document.addEventListener( 'click', ( event ) => {
+			pointerLockControls.lock(true);
+		});
+  }
+
+  addAxesHelper(){
+    const axesHelper = new AxesHelper( 5 );
+    axesHelper.position.set(0,-17,0);
+    scene.add( axesHelper ) ;
+  }
+
+  addPlayer(){
+    const playerStart = new Vector3(0,0,0);
+    const playerEnd = new Vector3(0,15,0);
+    const playerRadius = 2.5;
+
+    const player = new Capsule(playerStart, playerEnd, playerRadius);
+    player.translate(new Vector3(72,-10,16));
+
+    return player;
   }
 }
 

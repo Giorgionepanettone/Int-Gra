@@ -1,3 +1,0 @@
-map : https://sketchfab.com/3d-models/reachmultiplayerdefiantcondemned-1bb5805ca27b4b3ea8cd317936247285
-background : https://space-spheremaps.itch.io/space-spheremaps
-arms : https://sketchfab.com/3d-models/rigged-low-poly-fps-hands-c0d32b85e1ff4c4aa710d416545104b1

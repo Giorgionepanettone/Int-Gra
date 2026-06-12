@@ -1,0 +1,8 @@
+background : https://space-spheremaps.itch.io/space-spheremaps
+bug zapper : https://sketchfab.com/3d-models/handheld-bug-zapper-racket-05671940f47d40c79adcb85376df5ea9
+fly : https://sketchfab.com/3d-models/fly-low-poly-bc214680306e460d8ec72db056d76858
+zap sound: https://freesound.org/people/michael_grinnell/sounds/512471/
+robot arm : https://sketchfab.com/3d-models/rigged-low-poly-omni-rotation-robot-arm-95ce0495ccce41438c6dd1b07e94dd30#download
+other robot arm : https://sketchfab.com/3d-models/robot-arm-blender-mechanically-rigged-6fa4d326c5314b71be3e6869ce7b9c9f#download
+mosquito swatter : https://sketchfab.com/3d-models/mosquito-racket-6655a2fa5e984c9cab631a7f94fba275
+fps arms : https://sketchfab.com/3d-models/low-poly-fps-arms-rigged-ae2aab6803334a52b0ad517c3489b5a3#download

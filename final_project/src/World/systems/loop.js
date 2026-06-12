@@ -10,7 +10,6 @@ class Loop {
     this.renderer = renderer;
     this.cannonWorld = cannonWorld;
     this.updateTable = [];
-    this.actors = [];
   }
 
   start() {
@@ -33,20 +32,18 @@ class Loop {
     this.renderer.setAnimationLoop(null);
   }
 
-  addActor(actor){
-    this.actors.push(actor);
-  }
 
   addUpdateTable(obj){
     this.updateTable.push(obj);
   }
 
-  removeActor(actor){
-    this.actors.splice(0,1,actor);
-  }
+
 
   removeUpdateTable(obj){
-    this.updateTable.splice(0,1,obj);
+    const index = this.updateTable.indexOf(obj);
+    if (index > -1) { 
+      this.updateTable.splice(index, 1);
+    }
   }
 }
 

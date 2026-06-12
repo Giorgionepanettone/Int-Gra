@@ -1,19 +1,19 @@
 // in order to implement this i looked at threejs examples on fps game. https://github.com/mrdoob/three.js/blob/master/examples/games_fps.html
 
-import { Vector3 } from 'https://esm.sh/three@0.184.0';
+import { Vector3, Matrix4 } from 'https://esm.sh/three@0.184.0';
 
 const ZERO_VECTOR = new Vector3(0,0,0);
 
 const JUMP_FORCE = 40; 
 
-const PLAYER_MAX_VELOCITY = 40;
+const PLAYER_MAX_VELOCITY = 80;
 
 const GRAVITY = -200.1;
 
 const MAX_VELOCITY = new Vector3(PLAYER_MAX_VELOCITY, Math.max(JUMP_FORCE, PLAYER_MAX_VELOCITY/3), PLAYER_MAX_VELOCITY);
 const MIN_VELOCITY = new Vector3(-PLAYER_MAX_VELOCITY, -PLAYER_MAX_VELOCITY/3, -PLAYER_MAX_VELOCITY);
 
-const MOVEMENT_ACCELERATION = 100;
+const MOVEMENT_ACCELERATION = 200;
 
 const SPHERE_TRANSLATION_VECTOR = new Vector3(0,0.25,-0.17);
 
@@ -27,6 +27,7 @@ class fpsControls {
         this.octree = octree;
         this.playerOnFloor = false;
         this.actors = [];
+        this.weapons = [];
         this.state = {
             KeyW : false,
             KeyA : false,
@@ -55,11 +56,27 @@ class fpsControls {
     }
 
     removeActor(actor){
-        const index = array.indexOf(actor);
+        const index = this.actors.indexOf(actor);
         if (index > -1) { 
-            array.splice(index, 1);
+            this.actors.splice(index, 1);
         }
     }
+
+    addWeapon(weapon){
+        this.weapons.push(weapon);
+
+        if(this.weapons.length == 2){
+            console.log("careful adding too many weapons may impact performance severely");
+        }
+    }
+
+    removeWeapon(weapon){
+        const index = this.weapons.indexOf(weapon);
+        if (index > -1) { 
+            this.weapons.splice(index, 1);
+        }
+    }
+
 
     tick(delta){
         this.update(delta);
@@ -141,7 +158,7 @@ class fpsControls {
         //console.log(this.camera.rotation);
     }
 
-    handleCollision(delta) {
+    handleCollision() {
         
         let result = this.octree.capsuleIntersect( this.player );
 
@@ -168,7 +185,7 @@ class fpsControls {
             //actor.hitboxSphere.center.copy(actor.model.position);
             //actor.hitboxSphere.center.add(SPHERE_TRANSLATION_VECTOR);
             const result = this.octree.sphereIntersect(actor.hitboxSphere);
-
+            
             //console.log(actor.geometry.boundingBox);
             if (result && !result.normal.equals(ZERO_VECTOR)){
                 //console.log(result);
@@ -176,6 +193,24 @@ class fpsControls {
                 actor.handleCollision(result.normal);
                 //console.log(actor.position);
                 //translateOnAxis( -result.normal , result.normal.multiplyScalar( result.depth ) );
+            }
+            
+            for (const weapon of this.weapons){
+                const tempMatrix4 = new Matrix4();
+                //weapon.hitbox.applyMatrix4(weapon.model.parent.matrixWorld);
+                weapon.hitbox.copy(weapon.localHitbox);
+                weapon.hitbox.applyMatrix4(weapon.model.matrixWorld);
+                //weapon.hitbox.rotation.rotate(Math.PI);
+                //console.log(weapon.hitbox.rotation);
+                //weapon.hitbox.rotation.y = Math.PI/2;
+                //weapon.hitbox.rotation.z -= Math.PI;
+                
+                //.setFromObject(weapon.hitboxModel, false);
+                const actorHit = weapon.hitbox.intersectsSphere(actor.hitboxSphere);
+                if(actorHit){
+                    console.log("HIT");
+                    actor.handleHit(weapon.weaponName);
+                }
             }
         }
         
@@ -193,7 +228,7 @@ class fpsControls {
 
         this.updatePlayer(delta);
 
-        this.handleCollision(delta);
+        this.handleCollision();
 
         this.updateCamera();
     }

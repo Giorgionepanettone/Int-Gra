@@ -1,4 +1,4 @@
-import { Vector3, MathUtils, Quaternion} from 'https://esm.sh/three@0.184.0';
+import { DoubleSide, Vector3, MathUtils, Quaternion, Sphere, Mesh, MeshBasicMaterial, MeshStandardMaterial, SphereGeometry, Color, AdditiveBlending} from 'https://esm.sh/three@0.184.0';
 import {Tween, Easing, Group} from 'https://unpkg.com/@tweenjs/tween.js@25.0.0/dist/tween.esm.js'
 import { getRandomInInterval } from './randomUtils.js';
 
@@ -19,10 +19,38 @@ const STOP_PROBABILITY = 0.1;
 const MINIMUM_DIRECTION_CHANGE_TIME = 0.5;
 const MAXIMUM_DIRECTION_CHANGE_TIME = 1.5;
 
+const KILL_ANIMATION_DURATION = 350;
+
+const rand_vector = new Vector3();
+
+
 class Fly {
-    constructor(flyModel, hitboxSphere){
+    constructor(flyModel, controls, loop, scene, listener, deathAudioSharedBuffer, lightningTexture){
         this.model = flyModel;
-        this.hitboxSphere = hitboxSphere;
+        this.controls = controls;
+        this.loop = loop;
+        this.scene = scene;
+        this.listener = listener;
+        this.deathAudioSharedBuffer = deathAudioSharedBuffer;
+        this.scene = scene;
+        
+        this.model.geometry.computeBoundingSphere();
+        this.hitboxSphere = new Sphere(this.model.position, this.model.geometry.boundingSphere.radius/8); //this way the hitboxSphere center is always equal to model.position and I don't have to update it in collision checking
+        const invisibleSphereGeometry = new SphereGeometry(this.model.geometry.boundingSphere.radius/8);
+        //const invisibleSphereMaterial = new MeshStandardMaterial({color : 0x0000ff, roughness : 0});
+        const invisibleSphereMaterial = new MeshBasicMaterial({
+            color: 0xffffff,     
+            map: lightningTexture, 
+            transparent: false,
+            opacity: 1,
+            blending: AdditiveBlending,
+            depthWrite: false,
+            side: DoubleSide   
+        });
+        //invisibleSphereMaterial.emissive = new Color(0x0000ff);
+        this.invisibleSphere = new Mesh(invisibleSphereGeometry, invisibleSphereMaterial);
+        //this.model.add(this.invisibleSphere);
+        
         this.directionTimer = 0;
         this.alphaTimer = 0; //needed for lerping movement
         this.stoppedTimer = 0;
@@ -40,9 +68,13 @@ class Fly {
         this.directionChangeTime = getRandomInInterval(MINIMUM_DIRECTION_CHANGE_TIME, MAXIMUM_DIRECTION_CHANGE_TIME);
         this.initAnimationStuff();
         this.stopped = false;
+        this.flicker = false;
 
         this.currentY = new Vector3();
         this.adjustQuaternion = new Quaternion();
+        this.controls.addActor(this);
+        this.loop.addUpdateTable(this);
+        this.scene.add(this.model);
     }
 
     initAnimationStuff(){
@@ -58,7 +90,7 @@ class Fly {
         this.rightDownTween.chain(this.rightUpTween);
         this.rightUpTween.chain(this.rightDownTween);
         this.rightDownTween.start();
-        this.rightGroup = new Group(this.rightUpTween, this.rightDownTween);
+        //this.rightGroup = new Group(this.rightUpTween, this.rightDownTween);
 
         this.leftDownTween = new Tween(leftWing.rotation).to({x:LEFT_WING_END_ROTATION}, TWEEN_ANIMATION_DURATION);
         this.leftUpTween = new Tween(leftWing.rotation).to({x:LEFT_WING_START_ROTATION}, TWEEN_ANIMATION_DURATION);
@@ -66,10 +98,16 @@ class Fly {
         this.leftDownTween.chain(this.leftUpTween);
         this.leftUpTween.chain(this.leftDownTween);
         this.leftDownTween.start();
-        this.leftGroup = new Group(this.leftUpTween, this.leftDownTween);
+        this.tweenGroup = new Group(this.leftUpTween, this.leftDownTween, this.rightUpTween, this.rightDownTween);
     }
 
     tick(delta){
+        
+        if(this.flicker){
+            this.flickerFly(delta);
+            return;
+        }
+        
         if(!this.stopped){
             this.updateTimers(delta);
             if(this.directionTimer > this.directionChangeTime){
@@ -95,8 +133,18 @@ class Fly {
     }
 
     animate(){
-        this.rightGroup.update();
-        this.leftGroup.update();
+        this.tweenGroup.update();
+    }
+
+    flickerFly(delta){
+        rand_vector.randomDirection().multiplyScalar(15*delta);
+
+        this.invisibleSphere.position.add(rand_vector);
+
+        this.model.position.add(rand_vector);
+
+        this.invisibleSphere.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+        this.model.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
     }
 
     move(delta){
@@ -156,7 +204,41 @@ class Fly {
             this.reflectFly(collisionNormal);
         }
     }
+
+    handleHit(weaponName){
+        switch(weaponName){
+            case "ZAPPER":
+                this.flicker = true;
+                this.killFly();
+                break;
+        }
+    }
     
+    killFly(){
+        this.pauseWings();
+        this.controls.removeActor(this);
+        
+        this.playSound(this.deathAudioSharedBuffer);
+
+        this.invisibleSphere.position.copy(this.model.position);
+        
+        //this.invisibleSphere.material.map.offset.set(Math.random(), Math.random());
+        
+
+        this.scene.add(this.invisibleSphere);
+
+        window.setInterval( () => {
+            this.loop.removeUpdateTable(this);
+            this.scene.remove(this.model);
+            this.scene.remove(this.invisibleSphere);
+
+            this.invisibleSphere.geometry.dispose();
+            this.invisibleSphere.material.dispose();
+        }, KILL_ANIMATION_DURATION);
+    }
+
+
+
     reflectFly(collisionNormal){
         this.oldDirection.copy(this.currentDirection);
         this.currentDirection.reflect(collisionNormal); 
@@ -188,6 +270,20 @@ class Fly {
         this.changeDirection(collisionNormal, 2);
 
         this.stopDuration = getRandomInInterval(2, 10);
+    }
+
+    playSound(soundBuffer){
+        if(!soundBuffer){
+            console.log("playSound: empty sound buffer");
+            return
+        }
+
+        const source = this.listener.context.createBufferSource();
+        source.buffer = soundBuffer;
+        
+        //console.log(this.listener);
+        source.connect(this.listener.getInput());
+        source.start(0);
     }
     
 
