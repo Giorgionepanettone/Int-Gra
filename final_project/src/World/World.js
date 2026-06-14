@@ -13,6 +13,7 @@ import { createScene } from './components/scene.js';
 import { MainCharacter } from './components/mainCharacter.js';
 import { Fly } from './components/fly.js';
 import { Zapper} from './components/zapper.js'
+import { Arms } from './components/arms.js';
 
 import { Resizer } from './systems/Resizer.js';
 import { Loop } from './systems/Loop.js';
@@ -23,7 +24,7 @@ import { fpsControls } from './systems/fpsControls.js';
 import { Octree } from 'https://esm.sh/three@0.184.0/examples/jsm/math/Octree.js';
 import { CylinderGeometry } from 'https://esm.sh/three@0.184.0'
 import { Capsule } from 'https://esm.sh/three@0.184.0/examples/jsm/math/Capsule.js';
-import { TextureLoader, Vector3, MeshBasicMaterial, MeshNormalMaterial, Box3Helper, Sphere, SphereGeometry, Mesh, MathUtils, AudioListener, Audio, AudioLoader, BoxGeometry } from 'https://esm.sh/three@0.184.0';
+import { ObjectLoader,TextureLoader, Vector3, MeshBasicMaterial, MeshNormalMaterial, Box3Helper, Sphere, SphereGeometry, Mesh, MathUtils, AudioListener, Audio, AudioLoader, BoxGeometry } from 'https://esm.sh/three@0.184.0';
 import { OctreeHelper } from 'https://esm.sh/three@0.184.0/examples/jsm/helpers/OctreeHelper.js'
 
 import {Tween, Easing} from 'https://unpkg.com/@tweenjs/tween.js@25.0.0/dist/tween.esm.js'
@@ -33,8 +34,10 @@ let scene;
 let renderer;
 let loop;
 let cannonWorld;
+let currentWeapon;
 
-const NUMBER_OF_FLIES = 1000;
+
+const NUMBER_OF_FLIES = 500;
 
 class World {
   constructor(container) {
@@ -61,6 +64,8 @@ class World {
             child.material = material;
         }
     });
+
+    currentWeapon = "ZAPPER";
 
     //houseModel.visible = false;
     scene.add(houseModel);
@@ -126,7 +131,7 @@ class World {
     
     //console.log(zapperModel);
     //scene.add(zapperModel);
-    camera.add(zapperModel);
+    //camera.add(zapperModel);
     //zapper.localHitbox.rotation.x -= Math.PI/2;
     
     //camera.add(robotArmModel);
@@ -143,7 +148,24 @@ class World {
 
     //scene.add(robotArmModel);
     controls.addWeapon(zapper);
+    console.log(armsModel);
+
+    
     //scene.add(armsModel);
+
+    
+    //armsModel.getObjectByName("RootNode").remove(armsModel.getObjectByName("Armature002"));
+    
+    //armsModel.getObjectByName("RootNode").add(object);
+    camera.add(armsModel);
+    //scene.add(object);
+
+    const arms = new Arms(armsModel);
+    arms.handR.add(zapperModel);
+    arms.zapperPositionInit(zapperModel);
+    arms.updateCurrentWeapon("ZAPPER");
+    currentWeapon = arms;
+    loop.addUpdateTable(arms);
   }
 
   render() {
@@ -167,8 +189,21 @@ class World {
     const pointerLockControls = createPointerLockControls(camera, renderer.domElement); 
     loop.addUpdateTable(pointerLockControls);
     //sdpointerLockControls.lock(true);
-    document.addEventListener( 'click', ( event ) => {
-			pointerLockControls.lock(true);
+    document.addEventListener( 'mousedown', ( event ) => {
+			if(!pointerLockControls.isLocked) 
+      {
+        pointerLockControls.lock(true);
+      }
+      else{
+        currentWeapon.clickDown();
+      }
+		});
+
+    document.addEventListener( 'mouseup', ( event ) => {
+			if(pointerLockControls.isLocked) 
+        {
+        currentWeapon.clickUp();
+        }
 		});
   }
 
@@ -180,7 +215,7 @@ class World {
 
   addPlayer(){
     const playerStart = new Vector3(0,0,0);
-    const playerEnd = new Vector3(0,15,0);
+    const playerEnd = new Vector3(0,12,0);
     const playerRadius = 2.5;
 
     const player = new Capsule(playerStart, playerEnd, playerRadius);

@@ -1,0 +1,11 @@
+Model Information:
+* title:	Rigged Low Poly FPS Hands
+* source:	https://sketchfab.com/3d-models/rigged-low-poly-fps-hands-c0d32b85e1ff4c4aa710d416545104b1
+* author:	hvarley (https://sketchfab.com/hvarley)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Rigged Low Poly FPS Hands" (https://sketchfab.com/3d-models/rigged-low-poly-fps-hands-c0d32b85e1ff4c4aa710d416545104b1) by hvarley (https://sketchfab.com/hvarley) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
