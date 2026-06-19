@@ -1,9 +1,12 @@
 import { Fly } from "../components/fly.js";
 import { Vector3 } from "three";
 import { getRandomInInterval } from "../components/randomUtils.js";
+import { params as flyParams}  from "../components/fly.js";
+const params = {
+    NUMBER_OF_FLIES : 500,
+    SPAWN_RATE : 20,
+};
 
-const NUMBER_OF_FLIES = 500;
-const SPAWN_RATE = 20;
 
 const KITCHEN = new Vector3(21,0,10);
 const BATHROOM = new Vector3(38,0,-113);
@@ -12,7 +15,7 @@ const LIVINGROOM = new Vector3(120, 0, -22);
 
 
 class FlySpawner {
-    constructor(scene, player, flyModel, loop, listener, zapSoundSharedBuffer, burnSoundSharedBuffer, lightningTexture, controls){
+    constructor(scene, player, flyModel, loop, listener, zapSoundSharedBuffer, burnSoundSharedBuffer, lightningTexture, controls, gui){
         this.scene = scene;
         this.player = player;
         this.flyModel = flyModel;
@@ -22,21 +25,35 @@ class FlySpawner {
         this.burnSoundSharedBuffer = burnSoundSharedBuffer;
         this.lightningTexture = lightningTexture;
         this.controls = controls;
+        this.gui = gui;
+        const folder = gui.addFolder("Flies spawner");
+        folder.add(params, "NUMBER_OF_FLIES", 0, 2000);
+        folder.add(params, "SPAWN_RATE",0, 200);
+        
         this.aliveCount = 0;
         this.spawnableRooms = [];
+
+        const flyFolder = gui.addFolder("Flies");
+        flyFolder.add(flyParams, "MOVEMENT_SPEED", 1, 100);
+        flyFolder.add(flyParams, "FALLING_SPEED", 1, 100);
+        flyFolder.add(flyParams, "STOP_PROBABILITY", 0, 1);
+        flyFolder.add(flyParams, "MINIMUM_DIRECTION_CHANGE_TIME", 0.1, 10);
+        flyFolder.add(flyParams, "MAXIMUM_DIRECTION_CHANGE_TIME", 0.1, 10);
+        flyFolder.add(flyParams, "BURN_FLOOR_DEATH_DURATION", 10, 10000);
+        flyFolder.add(flyParams, "ZAP_KILL_ANIMATION_DURATION", 10, 10000);
     }
 
     tick(delta){
-        if(this.aliveCount == NUMBER_OF_FLIES){
+        if(this.aliveCount == params.NUMBER_OF_FLIES){
             return;
         }
         this.decideSpawnPosition();
         var spawned = 0;
-        while (this.aliveCount < NUMBER_OF_FLIES && spawned < SPAWN_RATE){
+        while (this.aliveCount < params.NUMBER_OF_FLIES && spawned < params.SPAWN_RATE){
             const choice = Math.floor(Math.random() * 3);
             const newModel = this.flyModel.clone();
             newModel.position.copy(this.spawnableRooms[choice]);
-            new Fly(newModel, this.controls, this.loop, this.scene, this.listener, this.zapSoundSharedBuffer, this.burnSoundSharedBuffer, this.lightningTexture, this);
+            new Fly(newModel, this.controls, this.loop, this.scene, this.listener, this.zapSoundSharedBuffer, this.burnSoundSharedBuffer, this.lightningTexture, this, this.gui, false);
             this.aliveCount++;
             spawned++;
         }

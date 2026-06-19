@@ -4,8 +4,16 @@ import { getRandomInInterval } from './randomUtils.js';
 
 const ZERO_VECTOR = new Vector3(0,0,0);
 
-const MOVEMENT_SPEED = 20;
-const FALLING_SPEED = 20;
+export const params = {
+    MOVEMENT_SPEED : 20,
+    FALLING_SPEED : 20,
+    STOP_PROBABILITY : 0.1,
+    MINIMUM_DIRECTION_CHANGE_TIME : 0.5,
+    MAXIMUM_DIRECTION_CHANGE_TIME : 1.5,
+    BURN_FLOOR_DEATH_DURATION : 2000,
+    ZAP_KILL_ANIMATION_DURATION : 350,
+};
+
 
 const LEFT_WING_START_ROTATION = MathUtils.degToRad(18);
 const RIGHT_WING_START_ROTATION = MathUtils.degToRad(18);
@@ -14,14 +22,6 @@ const LEFT_WING_END_ROTATION = MathUtils.degToRad(-60);
 const RIGHT_WING_END_ROTATION = MathUtils.degToRad(-60);
 
 const TWEEN_ANIMATION_DURATION = 100;
-
-const STOP_PROBABILITY = 0.1;
-
-const MINIMUM_DIRECTION_CHANGE_TIME = 0.5;
-const MAXIMUM_DIRECTION_CHANGE_TIME = 1.5;
-
-const KILL_ANIMATION_DURATION = 350;
-const BURN_FLOOR_DURATION = 2000;
 
 const rand_vector = new Vector3();
 const DOWN = new Vector3(0,-1,0);
@@ -72,7 +72,7 @@ class Fly {
         this.lookDirection = new Vector3();
         this.endQuaternion = new Quaternion();
         this.currentQuaternion = new Quaternion();
-        this.directionChangeTime = getRandomInInterval(MINIMUM_DIRECTION_CHANGE_TIME, MAXIMUM_DIRECTION_CHANGE_TIME);
+        this.directionChangeTime = getRandomInInterval(params.MINIMUM_DIRECTION_CHANGE_TIME, params.MAXIMUM_DIRECTION_CHANGE_TIME);
         this.initAnimationStuff();
         this.stopped = false;
         this.flicker = false;
@@ -145,7 +145,7 @@ class Fly {
     }
 
     fallDown(delta){
-        this.model.position.addScaledVector(DOWN, delta * FALLING_SPEED);
+        this.model.position.addScaledVector(DOWN, delta * params.FALLING_SPEED);
     }
 
     animate(){
@@ -174,7 +174,7 @@ class Fly {
         else{
             this.lookDirection.copy(this.currentDirection);
         }   
-        this.model.position.addScaledVector(this.lookDirection, delta * MOVEMENT_SPEED);
+        this.model.position.addScaledVector(this.lookDirection, delta * params.MOVEMENT_SPEED);
     }
 
     rotate(){
@@ -200,7 +200,7 @@ class Fly {
         
         this.currentDirection.normalize();
 
-        this.directionChangeTime = getRandomInInterval(MINIMUM_DIRECTION_CHANGE_TIME,MAXIMUM_DIRECTION_CHANGE_TIME);
+        this.directionChangeTime = getRandomInInterval(params.MINIMUM_DIRECTION_CHANGE_TIME,params.MAXIMUM_DIRECTION_CHANGE_TIME);
         
         this.endQuaternion.setFromUnitVectors(this.oldDirection, this.currentDirection);
     }
@@ -214,7 +214,7 @@ class Fly {
             this.invisibleSphere.material.dispose(); 
             window.setTimeout( () => {
                 this.scene.remove(this.model);
-        }, BURN_FLOOR_DURATION);
+        }, params.BURN_FLOOR_DEATH_DURATION);
         }
         
         
@@ -224,7 +224,7 @@ class Fly {
 
         const choice = Math.random();
 
-        if(choice <= STOP_PROBABILITY){
+        if(choice <= params.STOP_PROBABILITY){
             this.stopFly(collisionNormal);
         }
         else{
@@ -287,7 +287,7 @@ class Fly {
 
             this.invisibleSphere.geometry.dispose();
             this.invisibleSphere.material.dispose();
-        }, KILL_ANIMATION_DURATION);
+        }, params.ZAP_KILL_ANIMATION_DURATION);
     }
 
 

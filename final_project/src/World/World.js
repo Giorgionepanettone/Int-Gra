@@ -24,8 +24,10 @@ import { createFirstPersonControls } from './systems/firstPersonControls.js';
 import { Octree } from 'three/addons/math/Octree.js';
 import { Capsule } from 'three/addons/math/Capsule.js';
 import { OctreeHelper } from 'three/addons/helpers/OctreeHelper.js'
+import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 
 import {Tween, Easing} from 'tween'
+
 
 let camera;
 let scene;
@@ -50,6 +52,7 @@ class World {
     scene = createScene(backgroundTexture);
     loop = new Loop(camera, scene, renderer);
     
+    this.gui = new GUI({title : "Parameters"});
     this.zapperModel = zapperModel;
     this.flamethrowerModel = flamethrowerModel;
     this.weaponList = ["FLAMETHROWER", "ZAPPER"];
@@ -70,7 +73,7 @@ class World {
 
     const player = this.addPlayer();
     
-    this.controls = new fpsControls(player, camera, octree);
+    this.controls = new fpsControls(player, camera, octree, this.gui);
     
     loop.addUpdateTable(this.controls);
 
@@ -83,13 +86,13 @@ class World {
     flamethrowerAudio.setVolume(0.5);
     camera.add(listener);
     
-    loop.addUpdateTable(new FlySpawner(scene, player, flyModel, loop, listener, zapSoundSharedBuffer, burnSoundSharedBuffer, lightningTexture, this.controls));
+    loop.addUpdateTable(new FlySpawner(scene, player, flyModel, loop, listener, zapSoundSharedBuffer, burnSoundSharedBuffer, lightningTexture, this.controls, this.gui));
 
 
-    this.arms = new Arms(armsModel, camera);
+    this.arms = new Arms(armsModel, camera, this.gui);
     this.arms.model.updateMatrixWorld(true);
     this.zapper = new Zapper(zapperModel, camera);
-    this.flamethrower = new Flamethrower(flamethrowerModel, fireTexture, scene, flamethrowerAudio);
+    this.flamethrower = new Flamethrower(flamethrowerModel, fireTexture, scene, flamethrowerAudio, this.gui);
 
     this.swapWeapon(this.weaponList[this.currentWeaponIndex]);
     this.removeLoadingScreen();
@@ -118,7 +121,7 @@ class World {
   }
 
   setListeners(){
-    document.addEventListener( 'mousedown', ( event ) => {
+    renderer.domElement.addEventListener( 'mousedown', ( event ) => {
 			if(!this.pointerLockControls.isLocked) 
       {
         this.pointerLockControls.lock(true);
@@ -130,7 +133,7 @@ class World {
       }
 		});
 
-    document.addEventListener( 'mouseup', ( event ) => {
+    renderer.domElement.addEventListener( 'mouseup', ( event ) => {
 			if(this.pointerLockControls.isLocked) 
         {
           if(currentWeapon){
@@ -139,7 +142,7 @@ class World {
         }
 		});
 
-    document.addEventListener("wheel", (event) => {
+    renderer.domElement.addEventListener("wheel", (event) => {
       if( this.canChangeWeapon){
         this.currentWeaponIndex++;
         this.currentWeaponIndex %= this.weaponList.length;

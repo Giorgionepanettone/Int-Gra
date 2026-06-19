@@ -1,13 +1,16 @@
 import { Vector3 } from 'three';
 import { Fire } from '../systems/fire.js';
 
-const SPAWN_RATE = 1000;
-const MAX_PARTICLES = 4000;
+const params = {
+    SPAWN_RATE : 2000,
+}
+
+const MAX_PARTICLES = 10000;
 const DISTANCE_THRESHOLD = 40;
 const ANGLE_THRESHOLD = 0.99;
 
 class Flamethrower {
-    constructor(flamethrowerModel, fireTexture, scene, flamethrowerAudio){
+    constructor(flamethrowerModel, fireTexture, scene, flamethrowerAudio, gui){
         this.model = flamethrowerModel;
         this.fire = new Fire(fireTexture, new Vector3(0,0,0), scene, new Vector3(1,0,0), MAX_PARTICLES, 0);
         
@@ -23,10 +26,13 @@ class Flamethrower {
         this.weaponName = "FLAMETHROWER";
         this.fireStartToFly = new Vector3();
         this.flamethrowerAudio = flamethrowerAudio;
+
+        const folder = gui.addFolder("Flamethrower");
+        folder.add(params, "SPAWN_RATE", 10, 5000);
     }
 
     clickDown(){
-        this.fire.setParticlesSpawnRate(SPAWN_RATE);
+        this.fire.setParticlesSpawnRate(params.SPAWN_RATE);
         this.shooting = true;
         this.flamethrowerAudio.play();
     }

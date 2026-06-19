@@ -2,23 +2,25 @@
 
 import { Vector3 } from 'three';
 
+const params = {
+    GRAVITY : -200.0,
+};
+
+const MOVEMENT_ACCELERATION = 200;
+
 const ZERO_VECTOR = new Vector3(0,0,0);
 
 const JUMP_FORCE = 40; 
 
 const PLAYER_MAX_VELOCITY = 80;
 
-const GRAVITY = -200.1;
-
 const MAX_VELOCITY = new Vector3(PLAYER_MAX_VELOCITY, Math.max(JUMP_FORCE, PLAYER_MAX_VELOCITY/3), PLAYER_MAX_VELOCITY);
 const MIN_VELOCITY = new Vector3(-PLAYER_MAX_VELOCITY, -PLAYER_MAX_VELOCITY/3, -PLAYER_MAX_VELOCITY);
-
-const MOVEMENT_ACCELERATION = 200;
 
 
 class fpsControls {
 
-    constructor(player, camera, octree){
+    constructor(player, camera, octree, gui){
         
         this.player = player;
         this.camera = camera;
@@ -47,6 +49,8 @@ class fpsControls {
             this.state[event.code] = false;
         });
 
+        const folder = gui.addFolder("Player movement");
+        folder.add(params, "GRAVITY", -1000, -100);
     }
 
     addActor(actor){
@@ -109,7 +113,7 @@ class fpsControls {
         }
 
         if (!this.playerOnFloor){
-            this.playerVelocity.y += delta * GRAVITY;
+            this.playerVelocity.y += delta * params.GRAVITY;
         }
 
 

@@ -59,7 +59,7 @@ class Arms {
         this.rightTweenRightArm = new Tween(this.rightArm.rotation).to({y:this.rightArm.rotation.y}, SWING_ANIMATION_DURATION);
         this.rightTweenHandR1 = new Tween(this.handR.rotation).to({y:this.handR.rotation.y}, SWING_ANIMATION_DURATION);
         this.rightTweenHandR2 = new Tween(this.handR.rotation).to({z:this.handR.rotation.z}, SWING_ANIMATION_DURATION);
-        this.rightTweenForearmR = new Tween(this.forearmR.rotation).to({z:this.forearmR.rotation.z}, SWING_ANIMATION_DURATION);
+        this.rightTweenForearmR = new Tween(this.forearmR.rotation).to({z:this.forearmR.rotation.z},SWING_ANIMATION_DURATION);
         this.rightTweenRightArm2 = new Tween(this.rightArm.position).to({x:this.rightArm.position.x}, SWING_ANIMATION_DURATION)
 
         this.leftTweenGroupR = new Group(this.leftTweenRightArm, this.leftTweenHandR1, this.leftTweenHandR2, this.leftTweenForearmR, this.leftTweenRightArm2);
