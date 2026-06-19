@@ -1,4 +1,4 @@
-import { FlyControls } from 'https://esm.sh/three@0.184.0/examples/jsm/controls/FlyControls.js?module';
+import { FlyControls } from 'three/addons/controls/FlyControls.js?module';
 
 function createControls(object, canvas) {
     const controls = new FlyControls(object, canvas);

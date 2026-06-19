@@ -1,4 +1,4 @@
-import { PointerLockControls } from 'https://esm.sh/three@0.184.0/examples/jsm/controls/PointerLockControls.js?module';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js?module';
 
 function createPointerLockControls(object, canvas) {
     const controls = new PointerLockControls(object, canvas);

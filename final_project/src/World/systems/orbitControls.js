@@ -1,4 +1,4 @@
-import { OrbitControls } from 'https://esm.sh/three@0.184.0/examples/jsm/controls/OrbitControls.js?module';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js?module';
 
 function createOrbitControls(camera, canvas) {
     const controls = new OrbitControls(camera, canvas);

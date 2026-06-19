@@ -1,33 +1,55 @@
-import { MathUtils, ObjectLoader} from 'https://esm.sh/three@0.184.0';
-import {Tween, Easing, Group } from 'https://unpkg.com/@tweenjs/tween.js@25.0.0/dist/tween.esm.js'
+import { MathUtils,  Vector3} from 'three';
+import {Tween, Easing, Group } from 'tween'
 
 const SWING_ANIMATION_DURATION = 200;
 
 class Arms {
-    constructor(armsModel){
+    constructor(armsModel, camera){
         this.model = armsModel;
         
         this.bonesInit();
 
         this.nextIsLeft = 1;
+
+        this.originalProperties = new Map();
+
+        this.model.traverse((child) => {
+            this.originalProperties.set(child.uuid, {
+                position: child.position.clone(),
+                quaternion : child.quaternion.clone(),
+                scale : child.scale.clone()
+            });
+        });
+
+        this.camera = camera;
+        this.camera.add(this.model);
     }
 
+    restoreOriginalPosition(){
+        this.model.traverse((child) => {
+            const originalChild = this.originalProperties.get(child.uuid);
+            if(originalChild){
+                child.position.copy(originalChild.position);
+                child.quaternion.copy(originalChild.quaternion);
+                child.scale.copy(originalChild.scale);
+            }
+        });
+    }
 
-    zapperPositionInit(zapperModel){
+    zapperPositionInit(){
         this.model.position.set(0.6,-30,-28);
         this.leftArm.position.set(0,1000,0);
        
-        //this.model.rotateY(MathUtils.degToRad(-120));
+
         
         this.rightArm.rotateZ(MathUtils.degToRad(-120));
         
         this.rightArm.rotateY(MathUtils.degToRad(70));
         
-        //this.rightArm.rotateY(-30.2);
+   
         this.rightArm.position.set(-0.05,0,1.4);
         this.HandHoldPositionR();
-        //this.foreArmR.rotateY(MathUtils.degToRad(10));
-        //TEST ROTATION
+
         this.leftTweenRightArm = new Tween(this.rightArm.rotation).to({y:MathUtils.degToRad(60)}, SWING_ANIMATION_DURATION);
         this.leftTweenHandR1 = new Tween(this.handR.rotation).to({y:MathUtils.degToRad(20)}, SWING_ANIMATION_DURATION);
         this.leftTweenHandR2 = new Tween(this.handR.rotation).to({z:MathUtils.degToRad(25)}, SWING_ANIMATION_DURATION);
@@ -40,13 +62,7 @@ class Arms {
         this.rightTweenForearmR = new Tween(this.forearmR.rotation).to({z:this.forearmR.rotation.z}, SWING_ANIMATION_DURATION);
         this.rightTweenRightArm2 = new Tween(this.rightArm.position).to({x:this.rightArm.position.x}, SWING_ANIMATION_DURATION)
 
-        /* this.leftTweenRightArm.start();
-        this.leftTweenHandR1.start();    
-        this.leftTweenHandR2.start();
-        this.leftTweenForearmR.start(); */
-
         this.leftTweenGroupR = new Group(this.leftTweenRightArm, this.leftTweenHandR1, this.leftTweenHandR2, this.leftTweenForearmR, this.leftTweenRightArm2);
-        ///TEST ROTATION
         this.rightTweenGroupR = new Group(this.rightTweenRightArm, this.rightTweenHandR1, this.rightTweenHandR2, this.rightTweenForearmR, this.rightTweenRightArm2);
 
         this.leftTweenArray = [];
@@ -54,6 +70,105 @@ class Arms {
 
         this.rightTweenArray = [];
         this.rightTweenArray.push(this.rightTweenRightArm, this.rightTweenHandR1, this.rightTweenHandR2, this.rightTweenForearmR, this.rightTweenRightArm2);
+    }
+
+    flamethrowerPositionInit(){
+        //this.model.position.set(0.6,-30,-28);
+        this.model.rotateY(MathUtils.degToRad(165));
+        this.model.rotateX(MathUtils.degToRad(-25));
+
+        this.leftArm.position.set(0.03, -1.77, -0.05);
+        this.rightArm.position.set(-0.1, -1.55, -0.2);
+        //this.rightArm.position.add(new Vector3(-0.521, 0.2150, 0.034));
+
+        //RIGHT ARM
+        this.rightArm.rotation.set(MathUtils.degToRad(139.61), MathUtils.degToRad(-67.28), MathUtils.degToRad(4.73));
+
+        this.upperArmR.position.set(-0.009, 0.202, -0.011);
+        this.upperArmR.rotation.set(MathUtils.degToRad(125.58), MathUtils.degToRad(-52.27), MathUtils.degToRad(113.58));
+
+        this.forearmR.position.set(0, 0.322,0);
+        this.forearmR.rotation.set(MathUtils.degToRad(11.80), MathUtils.degToRad(4.27), MathUtils.degToRad(86.23));
+
+        this.handR.position.set(0, 0.237,0);
+        this.handR.rotation.set(MathUtils.degToRad(-3.32), MathUtils.degToRad(6.26), MathUtils.degToRad(-33.51));
+
+        this.palm01R.position.set(0.004, 0.038, 0.026);
+        this.palm01R.rotation.set(MathUtils.degToRad(-143.46), MathUtils.degToRad(-76.54), MathUtils.degToRad(-152.30));
+
+        this.index01R.position.set(0, 0.071, 0);
+        this.index01R.rotation.set(MathUtils.degToRad(75.79), MathUtils.degToRad(-0.81), MathUtils.degToRad(-3.38));
+        this.index02R.position.set(0, 0.049, 0);
+        this.index02R.rotation.set(MathUtils.degToRad(85.06), MathUtils.degToRad(-9.91), MathUtils.degToRad(3.35));
+        this.index03R.rotation.set(MathUtils.degToRad(93.95), MathUtils.degToRad(-11.67), MathUtils.degToRad(2.16));
+
+        this.thumb01R.rotation.set(MathUtils.degToRad(-42.90), MathUtils.degToRad(-32.93), MathUtils.degToRad(-65.33));
+        this.thumb02R.rotation.set(MathUtils.degToRad(55.80), MathUtils.degToRad(-15.99), MathUtils.degToRad(-13.54));
+        this.thumb03R.rotation.set(MathUtils.degToRad(38.31), MathUtils.degToRad(16.51), MathUtils.degToRad(37.17));
+
+        this.palm02R.rotation.set(MathUtils.degToRad(-114.67), MathUtils.degToRad(-80.57), MathUtils.degToRad(-117.78));
+
+        this.middle01R.rotation.set(MathUtils.degToRad(77.17), MathUtils.degToRad(10.18), MathUtils.degToRad(1.49));
+        this.middle02R.rotation.set(MathUtils.degToRad(89.92), MathUtils.degToRad(-5.32), MathUtils.degToRad(10.44));
+        this.middle03R.rotation.set(MathUtils.degToRad(100.85), MathUtils.degToRad(-4.5), MathUtils.degToRad(13.54));
+
+        this.palm03R.rotation.set(MathUtils.degToRad(74.74), MathUtils.degToRad(82.88), MathUtils.degToRad(-81.17));
+
+        this.ring01R.rotation.set(MathUtils.degToRad(111.72), MathUtils.degToRad(-48.0), MathUtils.degToRad(-173.74));
+        this.ring02R.rotation.set(MathUtils.degToRad(94.30), MathUtils.degToRad(-6.46), MathUtils.degToRad(40.21));
+        //this.ring03R.position.y += 0.015;
+        //this.ring03R.position.set(-0.019, 0.054, -0.002);
+        this.ring03R.rotation.set(MathUtils.degToRad(102.55), MathUtils.degToRad(20.15), MathUtils.degToRad(-1.96));
+
+        this.palm04R.rotation.set(MathUtils.degToRad(-114.22), MathUtils.degToRad(-80.70), MathUtils.degToRad(-118.08));
+
+        this.pinky01R.rotation.set(MathUtils.degToRad(51.38), MathUtils.degToRad(36.37), MathUtils.degToRad(23.47));
+        this.pinky02R.rotation.set(MathUtils.degToRad(85.52), MathUtils.degToRad(-7.19), MathUtils.degToRad(34.76));
+        this.pinky03R.position.y += 0.022;
+        this.pinky03R.position.x += 0.01;
+        this.pinky03R.rotation.set(MathUtils.degToRad(115), MathUtils.degToRad(-12.27), MathUtils.degToRad(18.29));
+
+
+        ///LEFT ARM
+        this.leftArm.rotation.set(MathUtils.degToRad(-149.82), MathUtils.degToRad(44.19), MathUtils.degToRad(-87.09));
+        
+        this.upperArmL.rotation.set(MathUtils.degToRad(109.37), MathUtils.degToRad(70.17), MathUtils.degToRad(-139.26));
+
+        this.forearmL.rotation.set(MathUtils.degToRad(27.64), MathUtils.degToRad(-0.51), MathUtils.degToRad(-6.82));
+
+        this.handL.rotation.set(MathUtils.degToRad(6.68), MathUtils.degToRad(-13.31), MathUtils.degToRad(-6.49));
+
+        this.palm01L.rotation.set(MathUtils.degToRad(-143.46), MathUtils.degToRad(76.54), MathUtils.degToRad(152.30));
+
+        this.index01L.rotation.set(MathUtils.degToRad(20.71), MathUtils.degToRad(-5.67), MathUtils.degToRad(-1.57));
+        this.index02L.rotation.set(MathUtils.degToRad(50.48), MathUtils.degToRad(-0.04), MathUtils.degToRad(18.96));
+        this.index03L.rotation.set(MathUtils.degToRad(62.37), MathUtils.degToRad(1.61), MathUtils.degToRad(24.75));
+
+        this.thumb01L.rotation.set(MathUtils.degToRad(-19.70), MathUtils.degToRad(45.76), MathUtils.degToRad(48.10));
+        this.thumb02L.rotation.set(MathUtils.degToRad(20.39), MathUtils.degToRad(-0.83), MathUtils.degToRad(-2.47));
+        this.thumb03L.rotation.set(MathUtils.degToRad(38.04), MathUtils.degToRad(12.78), MathUtils.degToRad(-66.12));
+
+        this.palm02L.rotation.set(MathUtils.degToRad(-114.67), MathUtils.degToRad(80.57), MathUtils.degToRad(117.78));
+
+        this.middle01L.rotation.set(MathUtils.degToRad(18.31), MathUtils.degToRad(-1.53), MathUtils.degToRad(-1.23));
+        this.middle02L.rotation.set(MathUtils.degToRad(62.33), MathUtils.degToRad(-2.01), MathUtils.degToRad(16.25));
+        this.middle03L.rotation.set(MathUtils.degToRad(69.65), MathUtils.degToRad(-0.26), MathUtils.degToRad(17.08));
+
+        this.palm03L.rotation.set(MathUtils.degToRad(74.74), MathUtils.degToRad(-82.88), MathUtils.degToRad(81.16));
+
+        this.ring01L.rotation.set(MathUtils.degToRad(161.85), MathUtils.degToRad(3.10), MathUtils.degToRad(-179.25));
+        this.ring02L.rotation.set(MathUtils.degToRad(63.69), MathUtils.degToRad(8.63), MathUtils.degToRad(27.38));
+        this.ring03L.rotation.set(MathUtils.degToRad(66.07), MathUtils.degToRad(-14.15), MathUtils.degToRad(24.50));
+
+        this.palm04L.rotation.set(MathUtils.degToRad(-55.93), MathUtils.degToRad(80.71), MathUtils.degToRad(41.92));
+
+        this.pinky01L.rotation.set(MathUtils.degToRad(17.15), MathUtils.degToRad(1.57), MathUtils.degToRad(-0.74));
+        this.pinky02L.rotation.set(MathUtils.degToRad(55.53), MathUtils.degToRad(-7.18), MathUtils.degToRad(24.09));
+        this.pinky03L.rotation.set(MathUtils.degToRad(67.94), MathUtils.degToRad(-16.26), MathUtils.degToRad(8.19));
+    }
+
+    onSwap(){
+        
     }
 
     updateCurrentWeapon(weapon){

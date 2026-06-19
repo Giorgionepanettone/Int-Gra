@@ -1,8 +1,8 @@
-import { WebGLRenderer } from 'https://esm.sh/three@0.184.0';
+import { WebGLRenderer } from 'three';
 
 function createRenderer() {
   const renderer = new WebGLRenderer({antialias : true});
-  renderer.physicallyCorrectLights = true;
+  //renderer.physicallyCorrectLights = true; //this kind of kills performance. Turned it off
   return renderer;
 }
 

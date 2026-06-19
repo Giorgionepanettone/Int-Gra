@@ -1,14 +1,11 @@
-import { Color, Scene, TextureLoader } from 'https://esm.sh/three@0.184.0';
+import { SRGBColorSpace, EquirectangularReflectionMapping, Scene} from 'three';
 
-function createScene() {
+function createScene(backgroundTexture) {
   const scene = new Scene();
   
-  const textureLoader = new TextureLoader();
-
-  const texture = textureLoader.load(
-    './assets/textures/space_spheremaps/blue_nebulae_1.png',
-  );
-  scene.background = texture;
+  backgroundTexture.mapping = EquirectangularReflectionMapping;
+  backgroundTexture.colorSpace = SRGBColorSpace;
+  scene.background = backgroundTexture;
 
   return scene;
 }

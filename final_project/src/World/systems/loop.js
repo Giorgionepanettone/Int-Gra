@@ -1,21 +1,20 @@
-import { Timer } from "https://esm.sh/three@0.184.0";
-import { Vector3 } from "https://esm.sh/three@0.184.0";
+import { Vector3, Timer } from "three";
 
 const clock = new Timer();
 
 class Loop {
-  constructor(camera, scene, renderer, cannonWorld) {
+  constructor(camera, scene, renderer) {
     this.camera = camera;
     this.scene = scene;
     this.renderer = renderer;
-    this.cannonWorld = cannonWorld;
     this.updateTable = [];
   }
 
   start() {
     this.renderer.setAnimationLoop(() => {
         clock.update();
-        const delta = clock.getDelta();
+        const delta = Math.min( 0.05, clock.getDelta()); //when brower window is not focused delta becomes really big causing problems
+
         for(const obj of this.updateTable){
           obj.tick(delta);
         }
@@ -43,6 +42,12 @@ class Loop {
     const index = this.updateTable.indexOf(obj);
     if (index > -1) { 
       this.updateTable.splice(index, 1);
+    }
+  }
+
+  removeUpdateTableIfExists(obj){
+    if (this.updateTable.includes(obj)){
+      this.removeUpdateTable(obj);
     }
   }
 }

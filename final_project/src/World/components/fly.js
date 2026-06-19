@@ -1,10 +1,11 @@
-import { DoubleSide, Vector3, MathUtils, Quaternion, Sphere, Mesh, MeshBasicMaterial, MeshStandardMaterial, SphereGeometry, Color, AdditiveBlending} from 'https://esm.sh/three@0.184.0';
-import {Tween, Easing, Group} from 'https://unpkg.com/@tweenjs/tween.js@25.0.0/dist/tween.esm.js'
+import { DoubleSide, Vector3, MathUtils, Quaternion, Sphere, Mesh, MeshBasicMaterial, MeshStandardMaterial, SphereGeometry, AdditiveBlending } from 'three';
+import { Tween, Easing, Group } from 'tween'
 import { getRandomInInterval } from './randomUtils.js';
 
 const ZERO_VECTOR = new Vector3(0,0,0);
 
 const MOVEMENT_SPEED = 20;
+const FALLING_SPEED = 20;
 
 const LEFT_WING_START_ROTATION = MathUtils.degToRad(18);
 const RIGHT_WING_START_ROTATION = MathUtils.degToRad(18);
@@ -20,24 +21,32 @@ const MINIMUM_DIRECTION_CHANGE_TIME = 0.5;
 const MAXIMUM_DIRECTION_CHANGE_TIME = 1.5;
 
 const KILL_ANIMATION_DURATION = 350;
+const BURN_FLOOR_DURATION = 2000;
 
 const rand_vector = new Vector3();
+const DOWN = new Vector3(0,-1,0);
 
+const BLACK_MATERIAL = new MeshStandardMaterial({ 
+    color: 0x000000, 
+    roughness: 1,
+    metalness: 0.0 
+});
 
 class Fly {
-    constructor(flyModel, controls, loop, scene, listener, deathAudioSharedBuffer, lightningTexture){
+    constructor(flyModel, controls, loop, scene, listener, deathAudioSharedBuffer, burnAudioSharedBuffer, lightningTexture, flySpawner){
         this.model = flyModel;
         this.controls = controls;
         this.loop = loop;
         this.scene = scene;
         this.listener = listener;
         this.deathAudioSharedBuffer = deathAudioSharedBuffer;
+        this.burnAudioSharedBuffer = burnAudioSharedBuffer;
         this.scene = scene;
+        this.flySpawner = flySpawner;
         
         this.model.geometry.computeBoundingSphere();
         this.hitboxSphere = new Sphere(this.model.position, this.model.geometry.boundingSphere.radius/8); //this way the hitboxSphere center is always equal to model.position and I don't have to update it in collision checking
         const invisibleSphereGeometry = new SphereGeometry(this.model.geometry.boundingSphere.radius/8);
-        //const invisibleSphereMaterial = new MeshStandardMaterial({color : 0x0000ff, roughness : 0});
         const invisibleSphereMaterial = new MeshBasicMaterial({
             color: 0xffffff,     
             map: lightningTexture, 
@@ -47,9 +56,7 @@ class Fly {
             depthWrite: false,
             side: DoubleSide   
         });
-        //invisibleSphereMaterial.emissive = new Color(0x0000ff);
         this.invisibleSphere = new Mesh(invisibleSphereGeometry, invisibleSphereMaterial);
-        //this.model.add(this.invisibleSphere);
         
         this.directionTimer = 0;
         this.alphaTimer = 0; //needed for lerping movement
@@ -69,6 +76,7 @@ class Fly {
         this.initAnimationStuff();
         this.stopped = false;
         this.flicker = false;
+        this.burned = false;
 
         this.currentY = new Vector3();
         this.adjustQuaternion = new Quaternion();
@@ -90,7 +98,6 @@ class Fly {
         this.rightDownTween.chain(this.rightUpTween);
         this.rightUpTween.chain(this.rightDownTween);
         this.rightDownTween.start();
-        //this.rightGroup = new Group(this.rightUpTween, this.rightDownTween);
 
         this.leftDownTween = new Tween(leftWing.rotation).to({x:LEFT_WING_END_ROTATION}, TWEEN_ANIMATION_DURATION);
         this.leftUpTween = new Tween(leftWing.rotation).to({x:LEFT_WING_START_ROTATION}, TWEEN_ANIMATION_DURATION);
@@ -105,6 +112,11 @@ class Fly {
         
         if(this.flicker){
             this.flickerFly(delta);
+            return;
+        }
+
+        if(this.burned){
+            this.fallDown(delta)
             return;
         }
         
@@ -130,6 +142,10 @@ class Fly {
             }
         }
         
+    }
+
+    fallDown(delta){
+        this.model.position.addScaledVector(DOWN, delta * FALLING_SPEED);
     }
 
     animate(){
@@ -191,6 +207,17 @@ class Fly {
 
 
     handleCollision(collisionNormal){
+        if(this.burned){
+            this.controls.removeActor(this);
+            this.loop.removeUpdateTable(this);
+            this.invisibleSphere.geometry.dispose();
+            this.invisibleSphere.material.dispose(); 
+            window.setTimeout( () => {
+                this.scene.remove(this.model);
+        }, BURN_FLOOR_DURATION);
+        }
+        
+        
         if(this.currentDirection.dot(collisionNormal) >= 0){ //fly is already trying to move away from wall but collision box still hitting
             return;
         }
@@ -206,15 +233,41 @@ class Fly {
     }
 
     handleHit(weaponName){
+        this.flySpawner.decreaseAliveCount();
         switch(weaponName){
             case "ZAPPER":
-                this.flicker = true;
                 this.killFly();
+                break;
+            case "FLAMETHROWER":
+                if(!this.burned){
+                    this.burnFly();
+                }
                 break;
         }
     }
+
+    burnFly(){
+        this.burned = true;
+        this.pauseWings();
+        this.black();
+        this.playSound(this.burnAudioSharedBuffer);
+    }
+
+    black(){
+        this.model.material = BLACK_MATERIAL;
+        this.model.children[0].material = BLACK_MATERIAL;
+        this.model.children[1].material = BLACK_MATERIAL;
+        this.model.children[2].material = BLACK_MATERIAL;
+        this.model.children[3].material = BLACK_MATERIAL;
+        this.model.children[5].material = BLACK_MATERIAL;
+        this.model.children[4].children[0].material = BLACK_MATERIAL;
+        this.model.children[4].children[1].material = BLACK_MATERIAL;
+        this.model.children[4].children[2].material = BLACK_MATERIAL;
+
+    }
     
     killFly(){
+        this.flicker = true;
         this.pauseWings();
         this.controls.removeActor(this);
         
@@ -227,7 +280,7 @@ class Fly {
 
         this.scene.add(this.invisibleSphere);
 
-        window.setInterval( () => {
+        window.setTimeout( () => {
             this.loop.removeUpdateTable(this);
             this.scene.remove(this.model);
             this.scene.remove(this.invisibleSphere);
@@ -252,8 +305,6 @@ class Fly {
         this.oldDirection.copy(this.currentDirection);
         this.lookDirection.copy(this.currentDirection);
         this.endQuaternion.setFromUnitVectors(this.oldDirection, this.currentDirection);
-        //this.rotate();
-        //this.model.rotateZ(-this.randomRotation);
         
         this.currentY.set(0,1,0);
         this.currentY.applyQuaternion(this.model.quaternion);
@@ -281,7 +332,6 @@ class Fly {
         const source = this.listener.context.createBufferSource();
         source.buffer = soundBuffer;
         
-        //console.log(this.listener);
         source.connect(this.listener.getInput());
         source.start(0);
     }

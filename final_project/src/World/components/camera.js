@@ -1,4 +1,4 @@
-import { PerspectiveCamera } from 'https://esm.sh/three@0.184.0';
+import { PerspectiveCamera } from 'three';
 
 function createCamera() {
   const camera = new PerspectiveCamera(
@@ -8,15 +8,8 @@ function createCamera() {
     1000, // far clipping plane
   );
 
-  // move the camera back so we can view the scene
-  //camera.rotation.y = Math.PI;
   camera.position.set(0, 0.1, -10);
-  camera.tick = () => {
 
-    //camera.rotation.x += 0.01;
-    //camera.rotation.y += 0.01;
-    //camera.rotation.z += 0.01;
-  }
   return camera;
 }
 

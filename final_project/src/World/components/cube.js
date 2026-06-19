@@ -1,4 +1,4 @@
-import { BoxGeometry, Mesh, MeshStandardMaterial, MathUtils, TextureLoader } from 'https://esm.sh/three@0.184.0';
+import { BoxGeometry, Mesh, MeshStandardMaterial, MathUtils, TextureLoader } from 'three';
 
 function createMaterial(){
   const textureLoader = new TextureLoader();

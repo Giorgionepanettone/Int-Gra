@@ -2,12 +2,20 @@
 <html>
 
 <head>
-  <title>Discoverthreejs.com - The Structure of a three.js App</title>
+  <title></title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta charset="UTF-8" />
 
-  <link rel="icon" href="https://discoverthreejs.com/favicon.ico" type="image/x-icon">
+  <script type="importmap">
+        {
+            "imports": {
+                "three": "./libs/three.js-r184/build/three.module.min.js",
+                "three/addons/": "./libs/three.js-r184/examples/jsm/",
+                "tween" : "./libs/tween.js-25.0.0/dist/tween.esm.js"
+            }
+        }
+  </script>
 
   <link href="./styles/main.css" rel="stylesheet" type="text/css">
 
@@ -15,6 +23,39 @@
 </head>
 
 <body>
+
+  <div id="loading_screen">
+    
+    <div class="top_text">
+        <div class="story">You are alone at home. The house is infested with flies.</div>
+        <div class="task">Kill as many as you can</div>
+    </div>
+
+    <div class="controls_container">
+        <div class="controls_title">Controls</div>
+        
+        <div class="control">
+            <span class="highlight">WASD</span> to move
+        </div>
+        
+        <div class="control">
+            <span class="highlight">Space</span> to jump
+        </div>
+        
+        <div class="control">
+            <span class="highlight">Mouse wheel</span> to<br>change weapon
+        </div>
+        
+        <div class="control">
+            <span class="highlight">Mouse click</span> to<br>use weapon
+        </div>
+    </div>
+
+    <div class="loading">
+        Loading...
+    </div>
+
+  </div>
 
   <div id="scene-container">
     <!-- Our <canvas> will be inserted here -->
