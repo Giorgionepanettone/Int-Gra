@@ -5,5 +5,8 @@ zap sound: https://freesound.org/people/michael_grinnell/sounds/512471/
 arms : https://drillimpact.itch.io/psx-first-person-arms-free
 fire texture : https://www.vecteezy.com/png/9374891-fire-explode-png-design
 fire texture 2 : https://www.vecteezy.com/png/9374805-fire-explode-png-design
+lightning texture : https://www.vecteezy.com/
 furniture : https://lowpolyassets.itch.io/low-poly-household-item-pack
 sounds : https://pixabay.com
+wood : https://polyhaven.com/textures/wood
+flamethrower : https://sketchfab.com/3d-models/flamethrower-6cda73193d754d58b91e08dd92b5e71d

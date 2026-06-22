@@ -69,12 +69,13 @@ class Particles {
 
         this.aliveCount = 0;
         this.particlesToSpawnCounter = 0;
+        const viewHeight = window.innerHeight * window.devicePixelRatio;
         this.uniforms = {
             custom_texture: {
                 value: texture
             },
             point_multiplier:{
-                value : window.innerHeight / (2.0 * Math.tan(30.0 * Math.PI / 180.0))
+                value : (viewHeight) / (2.0 * Math.tan(0.4363325 ))
             }
         };
 

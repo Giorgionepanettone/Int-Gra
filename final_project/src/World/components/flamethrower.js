@@ -7,12 +7,12 @@ const params = {
 
 const MAX_PARTICLES = 10000;
 const DISTANCE_THRESHOLD = 40;
-const ANGLE_THRESHOLD = 0.99;
+const ANGLE_THRESHOLD = 0.98;
 
 class Flamethrower {
     constructor(flamethrowerModel, fireTexture, scene, flamethrowerAudio, gui){
         this.model = flamethrowerModel;
-        this.fire = new Fire(fireTexture, new Vector3(0,0,0), scene, new Vector3(1,0,0), MAX_PARTICLES, 0);
+        this.fire = new Fire(fireTexture, new Vector3(0,0,0), scene, new Vector3(1,0,0), MAX_PARTICLES, 0, gui);
         
         this.fireStart = this.model.getObjectByName("fireStart"); //where the fire should shoot from. Added this in blender. Sounded nice but it did not work and I had to add a displacement vector anyway
 

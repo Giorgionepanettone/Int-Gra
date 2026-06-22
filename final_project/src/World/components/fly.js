@@ -233,15 +233,18 @@ class Fly {
     }
 
     handleHit(weaponName){
+        if(this.burned || this.flicker){
+            return;
+        }
+
         this.flySpawner.decreaseAliveCount();
         switch(weaponName){
             case "ZAPPER":
                 this.killFly();
                 break;
             case "FLAMETHROWER":
-                if(!this.burned){
-                    this.burnFly();
-                }
+                this.burnFly();
+
                 break;
         }
     }

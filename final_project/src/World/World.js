@@ -12,13 +12,13 @@ import { Arms } from './components/arms.js';
 import { Flamethrower } from './components/flamethrower.js';
 
 import { Resizer } from './systems/Resizer.js';
-import { Loop } from './systems/Loop.js';
+import { Loop } from './systems/loop.js';
 import { createRenderer } from './systems/renderer.js';
 import { fpsControls } from './systems/fpsControls.js';
 import { Particles } from './systems/particles.js';
 import { Fire } from './systems/fire.js';
 import { FlySpawner } from './systems/FlySpawner.js';
-import { createPointerLockControls } from './systems/PointerLockControls.js';
+import { createPointerLockControls } from './systems/pointerLockControls.js';
 import { createFirstPersonControls } from './systems/firstPersonControls.js';
 
 import { Octree } from 'three/addons/math/Octree.js';
@@ -53,6 +53,7 @@ class World {
     loop = new Loop(camera, scene, renderer);
     
     this.gui = new GUI({title : "Parameters"});
+    this.gui.close();
     this.zapperModel = zapperModel;
     this.flamethrowerModel = flamethrowerModel;
     this.weaponList = ["FLAMETHROWER", "ZAPPER"];

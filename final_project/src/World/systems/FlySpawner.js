@@ -3,8 +3,8 @@ import { Vector3 } from "three";
 import { getRandomInInterval } from "../components/randomUtils.js";
 import { params as flyParams}  from "../components/fly.js";
 const params = {
-    NUMBER_OF_FLIES : 500,
-    SPAWN_RATE : 20,
+    NUMBER_OF_FLIES : 300,
+    SPAWN_RATE : 40,
 };
 
 
@@ -79,6 +79,7 @@ class FlySpawner {
         this.aliveCount--;
         if(this.aliveCount < 0){
             console.log("FATAL ERROR FLYSPAWNER ALIVE COUNT IS NEGATIVE");
+            this.aliveCount = 0;
         }
     }
 }

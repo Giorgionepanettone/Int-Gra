@@ -9,7 +9,7 @@ function createCamera() {
   );
 
   camera.position.set(0, 0.1, -10);
-
+  camera.rotation.y += Math.PI/2;
   return camera;
 }
 

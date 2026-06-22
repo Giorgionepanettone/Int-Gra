@@ -13,15 +13,11 @@ class Loop {
   start() {
     this.renderer.setAnimationLoop(() => {
         clock.update();
-        const delta = Math.min( 0.05, clock.getDelta()); //when brower window is not focused delta becomes really big causing problems
+        const delta = Math.min( 0.03, clock.getDelta()); //when brower window is not focused delta becomes really big causing problems
 
         for(const obj of this.updateTable){
           obj.tick(delta);
         }
-
-        //const result = this.octree.capsuleIntersect(player); 
-        
-        //handleCollision
 
         this.renderer.render(this.scene, this.camera);
     });
